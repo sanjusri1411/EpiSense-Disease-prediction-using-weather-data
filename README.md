@@ -1,4 +1,4 @@
-# 🦟 Epidemic Intelligence - Disease Predictor
+# 🦟 EpiSense - Disease Predictor
 
 A Flask-based web application for predicting dengue and malaria cases using LightGBM machine learning models.
 
