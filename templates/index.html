@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EpiSense — Disease Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080e1a;
+  --surface:#0d1526;
+  --surface2:#111d33;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.13);
+  --text:#e8ecf4;
+  --muted:#64748b;
+  --muted2:#94a3b8;
+
+  --rain:#22d3ee;      /* cyan */
+  --rain-dim:rgba(34,211,238,0.12);
+  --rain-glow:rgba(34,211,238,0.25);
+
+  --sun:#f59e0b;       /* amber */
+  --sun-dim:rgba(245,158,11,0.12);
+  --sun-glow:rgba(245,158,11,0.25);
+
+  --snow:#818cf8;      /* indigo */
+  --snow-dim:rgba(129,140,248,0.12);
+  --snow-glow:rgba(129,140,248,0.25);
+}
+
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── BACKGROUND ── */
+.bg-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(160px);opacity:.13;animation:blobDrift 24s ease-in-out infinite alternate}
+.b1{width:900px;height:700px;background:conic-gradient(from 0deg,#22d3ee,#0ea5e9,#6366f1);top:-300px;left:-200px;animation-delay:0s}
+.b2{width:700px;height:600px;background:conic-gradient(from 90deg,#f59e0b,#ef4444,#f59e0b);bottom:-200px;right:-150px;animation-delay:-10s}
+.b3{width:500px;height:500px;background:#6366f1;top:40%;left:45%;animation-delay:-18s;opacity:.07}
+@keyframes blobDrift{0%{transform:translate(0,0) scale(1) rotate(0deg)}100%{transform:translate(40px,-50px) scale(1.08) rotate(6deg)}}
+
+.scanlines{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
+  opacity:.6}
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.6) 100%)}
+
+/* ── NAV ── */
+nav{position:relative;z-index:20;display:flex;justify-content:space-between;align-items:center;
+  padding:22px 56px;border-bottom:1px solid var(--border)}
+.logo{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--rain),#6366f1);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.nav-chip{display:flex;align-items:center;gap:8px;padding:6px 16px;border-radius:30px;
+  background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.2);
+  font-size:.75rem;font-weight:600;color:var(--rain);letter-spacing:.5px}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--rain);animation:pulseAnim 2s infinite}
+@keyframes pulseAnim{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+
+/* ── HERO (compact) ── */
+.hero{position:relative;z-index:5;text-align:center;padding:52px 40px 20px}
+.hero-tag{display:inline-flex;align-items:center;gap:7px;padding:5px 15px;border-radius:30px;
+  background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.18);
+  font-size:.7rem;font-weight:700;color:var(--rain);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+h1{font-family:'Outfit',sans-serif;font-weight:900;font-size:clamp(1.6rem,3.5vw,2.6rem);
+  letter-spacing:-1px;line-height:1.15;margin-bottom:10px;color:var(--text)}
+h1 .hi{background:linear-gradient(135deg,var(--rain),#6366f1);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.hero-desc{font-size:.95rem;color:var(--muted2);max-width:500px;margin:0 auto 36px;line-height:1.7;font-weight:400}
+
+/* ── SEASON SECTION HEADER ── */
+.seasons-label{position:relative;z-index:5;text-align:center;margin-bottom:20px}
+.seasons-label h2{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.05rem;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.seasons-label p{font-size:.82rem;color:var(--muted);font-weight:400}
+
+/* ── SEASON CARDS ── */
+.seasons{position:relative;z-index:5;display:grid;grid-template-columns:repeat(3,1fr);
+  gap:20px;max-width:1080px;margin:0 auto;padding:0 40px 56px}
+
+.scard{
+  position:relative;border-radius:24px;padding:0;cursor:pointer;overflow:hidden;
+  border:1px solid var(--border);background:var(--surface);
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1),border-color .3s,box-shadow .4s;
+  text-decoration:none;display:block;
+}
+.scard:hover{transform:translateY(-12px) scale(1.02)}
+.scard:hover .scard-inner::before{opacity:1}
+.scard:hover .arrow-icon{transform:translateX(5px)}
+.scard:hover .season-glow{opacity:1}
+
+.season-glow{position:absolute;inset:0;opacity:0;transition:opacity .4s;pointer-events:none;border-radius:24px}
+.scard.rainy .season-glow{background:radial-gradient(ellipse at 30% 0%,rgba(34,211,238,.14),transparent 65%);
+  box-shadow:0 0 60px rgba(34,211,238,.12) inset}
+.scard.summer .season-glow{background:radial-gradient(ellipse at 30% 0%,rgba(245,158,11,.14),transparent 65%);
+  box-shadow:0 0 60px rgba(245,158,11,.12) inset}
+.scard.winter .season-glow{background:radial-gradient(ellipse at 30% 0%,rgba(129,140,248,.14),transparent 65%);
+  box-shadow:0 0 60px rgba(129,140,248,.12) inset}
+
+.scard.rainy:hover{border-color:var(--rain);box-shadow:0 24px 60px rgba(34,211,238,.15),0 0 0 1px rgba(34,211,238,.1)}
+.scard.summer:hover{border-color:var(--sun);box-shadow:0 24px 60px rgba(245,158,11,.15),0 0 0 1px rgba(245,158,11,.1)}
+.scard.winter:hover{border-color:var(--snow);box-shadow:0 24px 60px rgba(129,140,248,.15),0 0 0 1px rgba(129,140,248,.1)}
+
+/* Top colour strip */
+.scard-strip{height:4px;width:100%}
+.scard.rainy .scard-strip{background:linear-gradient(90deg,var(--rain),#6366f1)}
+.scard.summer .scard-strip{background:linear-gradient(90deg,var(--sun),#ef4444)}
+.scard.winter .scard-strip{background:linear-gradient(90deg,var(--snow),#a5b4fc)}
+
+.scard-body{padding:28px 26px 24px}
+
+/* Icon */
+.scard-icon-wrap{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;
+  justify-content:center;font-size:1.9rem;margin-bottom:18px;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.scard:hover .scard-icon-wrap{transform:scale(1.12) rotate(-6deg)}
+.scard.rainy .scard-icon-wrap{background:var(--rain-dim);border:1px solid rgba(34,211,238,.2)}
+.scard.summer .scard-icon-wrap{background:var(--sun-dim);border:1px solid rgba(245,158,11,.2)}
+.scard.winter .scard-icon-wrap{background:var(--snow-dim);border:1px solid rgba(129,140,248,.2)}
+
+.active-badge{position:absolute;top:16px;right:16px;padding:3px 10px;border-radius:20px;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:.58rem;letter-spacing:1.2px;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--rain),#0ea5e9);color:#001c24}
+.info-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  font-size:.62rem;color:var(--muted2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;font-weight:600}
+
+.scard-name{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:-.5px;margin-bottom:4px}
+.scard.rainy .scard-name{color:var(--rain)}
+.scard.summer .scard-name{color:var(--sun)}
+.scard.winter .scard-name{color:var(--snow)}
+
+.scard-date{font-size:.72rem;color:var(--muted);font-weight:600;letter-spacing:.5px;margin-bottom:10px;text-transform:uppercase}
+.scard-desc{font-size:.84rem;color:var(--muted2);line-height:1.65;margin-bottom:18px}
+
+.dtags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.dtag{padding:3px 10px;border-radius:20px;font-size:.69rem;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:var(--muted2)}
+.scard.rainy .dtag.hi{background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.25);color:var(--rain)}
+
+.scard-cta{display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:.84rem}
+.scard.rainy .scard-cta{color:var(--rain)}
+.scard.summer .scard-cta{color:var(--sun)}
+.scard.winter .scard-cta{color:var(--snow)}
+.arrow-icon{transition:transform .25s;display:inline-block}
+
+/* ── STATS BAR ── */
+.stats{position:relative;z-index:5;display:flex;justify-content:center;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stat{flex:1;max-width:230px;padding:24px 20px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.9rem;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--rain),#6366f1);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.stat-l{font-size:.7rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+
+/* ── FOOTER ── */
+footer{position:relative;z-index:5;text-align:center;padding:32px 40px;
+  border-top:1px solid var(--border);color:var(--muted);font-size:.78rem;line-height:1.9}
+footer em{color:var(--rain);font-style:normal;font-weight:700}
+
+/* ── FADE IN ── */
+.fi{opacity:0;transform:translateY(24px);animation:fadeIn .65s ease forwards}
+@keyframes fadeIn{to{opacity:1;transform:translateY(0)}}
+.d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.25s}
+.d4{animation-delay:.38s}.d5{animation-delay:.52s}.d6{animation-delay:.66s}.d7{animation-delay:.8s}
+
+@media(max-width:900px){
+  nav{padding:16px 22px}
+  .hero{padding:40px 22px 16px}
+  .seasons{grid-template-columns:1fr;padding:0 22px 44px;max-width:420px}
+  .stats{flex-wrap:wrap}
+  .stat{min-width:50%;border-right:none;border-bottom:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<nav class="fi d1">
+  <div class="logo">EpiSense</div>
+  <div class="nav-chip"><span class="pulse"></span>ML-Powered Surveillance</div>
+</nav>
+
+<!-- Hero — compact -->
+<section class="hero">
+  <div class="hero-tag fi d2"><span class="pulse"></span>Disease Prediction Platform</div>
+  <h1 class="fi d3">AI-Powered <span class="hi">Disease Intelligence</span></h1>
+  <p class="hero-desc fi d4">Early warning system for diseases.</p>
+</section>
+
+<!-- Season section header -->
+<div class="seasons-label fi d4">
+  <h2>Select a Season</h2>
+  <p>Each season brings distinct disease risks — explore or predict</p>
+</div>
+
+<!-- Season Cards -->
+<div class="seasons">
+
+  <!-- RAINY -->
+  <a href="/predict/rainy" class="scard rainy fi d5">
+    <div class="scard-strip"></div>
+    <div class="season-glow"></div>
+    <span class="active-badge">Active Model</span>
+    <div class="scard-body">
+      <div class="scard-icon-wrap">🌧️</div>
+      <div class="scard-name">Rainy Season</div>
+      <div class="scard-date">June – October</div>
+      <div class="scard-desc">Peak transmission period for vector-borne diseases. Monsoon rainfall creates ideal mosquito breeding conditions.</div>
+      <div class="dtags">
+        <span class="dtag hi">🦟 Dengue</span>
+        <span class="dtag hi">🩸 Malaria</span>
+        <span class="dtag">Leptospirosis</span>
+        <span class="dtag">Typhoid</span>
+      </div>
+      <div class="scard-cta">Launch Predictor <span class="arrow-icon">→</span></div>
+    </div>
+  </a>
+
+  <!-- SUMMER -->
+  <a href="/season/summer" class="scard summer fi d6">
+    <div class="scard-strip"></div>
+    <div class="season-glow"></div>
+    <div class="scard-body">
+      <span class="info-badge">ℹ Info Guide</span>
+      <div class="scard-icon-wrap">☀️</div>
+      <div class="scard-name">Summer Season</div>
+      <div class="scard-date">March – May</div>
+      <div class="scard-desc">High temperatures bring heat-related illness and waterborne disease risks that require specific awareness.</div>
+      <div class="dtags">
+        <span class="dtag">🌡️ Heat Stroke</span>
+        <span class="dtag">💧 Dehydration</span>
+        <span class="dtag">🦠 Cholera</span>
+        <span class="dtag">👁️ Conjunctivitis</span>
+      </div>
+      <div class="scard-cta">Explore Diseases <span class="arrow-icon">→</span></div>
+    </div>
+  </a>
+
+  <!-- WINTER -->
+  <a href="/season/winter" class="scard winter fi d7">
+    <div class="scard-strip"></div>
+    <div class="season-glow"></div>
+    <div class="scard-body">
+      <span class="info-badge">ℹ Info Guide</span>
+      <div class="scard-icon-wrap">❄️</div>
+      <div class="scard-name">Winter Season</div>
+      <div class="scard-date">November – February</div>
+      <div class="scard-desc">Cold weather suppresses immunity and enables respiratory infections to spread rapidly in enclosed spaces.</div>
+      <div class="dtags">
+        <span class="dtag">🤧 Influenza</span>
+        <span class="dtag">🫁 Pneumonia</span>
+        <span class="dtag">🤒 Common Cold</span>
+        <span class="dtag">😮‍💨 Bronchitis</span>
+      </div>
+      <div class="scard-cta">Explore Diseases <span class="arrow-icon">→</span></div>
+    </div>
+  </a>
+
+</div>
+
+<!-- Stats -->
+<div class="stats fi d7">
+  <div class="stat"><div class="stat-n">2</div><div class="stat-l">Active ML Models</div></div>
+  <div class="stat"><div class="stat-n">5yr</div><div class="stat-l">Training Data</div></div>
+  <div class="stat"><div class="stat-n">Live</div><div class="stat-l">Real-time Risk</div></div>
+  <div class="stat"><div class="stat-n">LightGBM</div><div class="stat-l">Algorithm</div></div>
+</div>
+
+<footer>
+  <p>EpiSense · Multi-Disease Prediction System · BE Project 2025–26</p>
+  <p>Built with <em>Flask</em> + <em>LightGBM</em> · Department of Computer Science &amp; Engineering</p>
+</footer>
+
+</body>
+</html>

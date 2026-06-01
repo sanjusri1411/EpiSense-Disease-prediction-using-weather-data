@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EpiSense — Winter Season Health Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060810;
+  --surface:#0c0f1c;
+  --surface2:#111528;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(129,140,248,0.2);
+  --text:#dde4f8;
+  --muted:#4e5a7a;
+  --muted2:#8b9bbf;
+  --snow:#818cf8;
+  --snow2:#a5b4fc;
+  --snow3:#c7d2fe;
+  --snow-dim:rgba(129,140,248,0.1);
+  --snow-glow:rgba(129,140,248,0.2);
+  --teal:#06b6d4;
+  --teal-dim:rgba(6,182,212,0.1);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden}
+
+.bg-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(180px);animation:drift 28s ease-in-out infinite alternate}
+.b1{width:900px;height:700px;background:radial-gradient(circle,rgba(129,140,248,.18),rgba(6,182,212,.08),transparent 70%);top:-250px;left:-150px;opacity:1}
+.b2{width:700px;height:600px;background:radial-gradient(circle,rgba(99,102,241,.12),transparent 70%);bottom:-100px;right:-100px;animation-delay:-14s;opacity:1}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-30px,40px) scale(1.07)}}
+.scanlines{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px)}
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.7) 100%)}
+
+/* NAV */
+nav{position:relative;z-index:20;display:flex;justify-content:space-between;align-items:center;
+  padding:20px 56px;border-bottom:1px solid var(--border);backdrop-filter:blur(12px)}
+.logo{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.4rem;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--snow),var(--teal));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;text-decoration:none}
+.nav-r{display:flex;align-items:center;gap:12px}
+.back-btn{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--muted2);
+  font-size:.83rem;font-weight:600;padding:7px 14px;border-radius:30px;
+  border:1px solid var(--border);transition:all .2s}
+.back-btn:hover{border-color:var(--snow);color:var(--snow)}
+.season-chip{display:flex;align-items:center;gap:7px;padding:6px 16px;border-radius:30px;
+  background:var(--snow-dim);border:1px solid rgba(129,140,248,.25);
+  font-size:.73rem;font-weight:700;color:var(--snow2);letter-spacing:.4px}
+
+/* PAGE HEADER */
+.page-header{position:relative;z-index:5;padding:52px 56px 36px;max-width:1100px;margin:0 auto}
+.season-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:30px;
+  background:var(--snow-dim);border:1px solid rgba(129,140,248,.22);
+  font-size:.68rem;font-weight:700;color:var(--snow2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+.page-title{font-family:'Outfit',sans-serif;font-weight:900;font-size:clamp(2.2rem,5vw,3.8rem);
+  letter-spacing:-2px;line-height:1.05;margin-bottom:14px}
+.page-title .accent{background:linear-gradient(135deg,var(--snow),var(--teal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-subtitle{font-size:1rem;color:var(--muted2);max-width:620px;line-height:1.7}
+
+/* FUTURE BANNER */
+.future-banner{position:relative;z-index:5;margin:0 56px 40px;max-width:988px;
+  background:rgba(129,140,248,.06);border:1px dashed rgba(129,140,248,.3);
+  border-radius:14px;padding:16px 22px;display:flex;align-items:center;gap:14px}
+.future-icon{font-size:1.4rem;flex-shrink:0}
+.future-text{font-size:.84rem;color:var(--muted2);line-height:1.6}
+.future-text strong{color:var(--snow2)}
+
+/* DISEASE GRID */
+.disease-grid{position:relative;z-index:5;display:grid;grid-template-columns:repeat(2,1fr);
+  gap:18px;max-width:1100px;margin:0 auto;padding:0 56px 20px}
+
+.dcard{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;
+  transition:transform .3s cubic-bezier(.34,1.4,.64,1),border-color .3s,box-shadow .3s}
+.dcard:hover{transform:translateY(-6px);border-color:rgba(129,140,248,.3);
+  box-shadow:0 20px 50px rgba(129,140,248,.08)}
+
+.dcard-header{padding:22px 24px 0;display:flex;align-items:flex-start;gap:14px}
+.dcard-emoji-wrap{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;
+  justify-content:center;font-size:1.7rem;background:var(--snow-dim);border:1px solid rgba(129,140,248,.2);flex-shrink:0}
+.dcard-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:-.3px;
+  margin-bottom:4px;color:var(--snow2)}
+.dcard-subtitle{font-size:.76rem;color:var(--muted);font-weight:500}
+
+.dcard-tabs{display:flex;gap:0;padding:16px 24px 0;border-bottom:1px solid var(--border)}
+.dtab{padding:8px 14px;font-size:.73rem;font-weight:700;color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.3px}
+.dtab.active{color:var(--snow2);border-bottom-color:var(--snow)}
+.dtab:hover:not(.active){color:var(--muted2)}
+
+.dcard-panel{display:none;padding:18px 24px 22px}
+.dcard-panel.active{display:block;animation:panelIn .2s ease}
+@keyframes panelIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.dcard-panel ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:9px}
+.dcard-panel li{display:flex;align-items:flex-start;gap:9px;font-size:.84rem;color:var(--muted2);line-height:1.6}
+.bullet{width:6px;height:6px;border-radius:50%;background:var(--snow);flex-shrink:0;margin-top:7px}
+.red-bullet{background:#ef4444}
+.green-bullet{background:#22c55e}
+
+/* QUICK TIPS */
+.tips-section{position:relative;z-index:5;max-width:1100px;margin:0 auto;padding:28px 56px 56px}
+.tips-header{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.3px;
+  color:var(--snow2);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.tips-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;
+  transition:border-color .2s}
+.tip-card:hover{border-color:rgba(129,140,248,.25)}
+.tip-icon{font-size:1.5rem;margin-bottom:10px}
+.tip-title{font-family:'Outfit',sans-serif;font-weight:700;font-size:.88rem;color:var(--snow2);margin-bottom:5px}
+.tip-body{font-size:.78rem;color:var(--muted2);line-height:1.6}
+
+/* FADE IN */
+.fi{opacity:0;transform:translateY(20px);animation:fadeIn .6s ease forwards}
+@keyframes fadeIn{to{opacity:1;transform:translateY(0)}}
+.d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.25s}
+.d4{animation-delay:.35s}.d5{animation-delay:.48s}.d6{animation-delay:.62s}
+
+@media(max-width:900px){
+  nav,.page-header,.future-banner,.disease-grid,.tips-section{padding-left:20px;padding-right:20px}
+  .future-banner{margin-left:20px;margin-right:20px}
+  .disease-grid{grid-template-columns:1fr}
+  .tips-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+</div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<nav>
+  <a href="/" class="logo">EpiSense</a>
+  <div class="nav-r">
+    <div class="season-chip">❄️ Winter Season</div>
+    <a href="/" class="back-btn">← Home</a>
+  </div>
+</nav>
+
+<div class="page-header fi d1">
+  <div class="season-eyebrow">❄️ November – February</div>
+  <h1 class="page-title">Winter Season<br><span class="accent">Disease Guide</span></h1>
+  <p class="page-subtitle">Cold weather suppresses immunity and creates ideal conditions for respiratory infections to spread. Understand the risks and how to stay protected this winter.</p>
+</div>
+
+<div class="future-banner fi d2">
+  <span class="future-icon">🚀</span>
+  <div class="future-text"><strong>Prediction models for this season will be added in future enhancements.</strong> A Winter Respiratory Disease Prediction module is planned — using temperature, humidity, and AQI data to forecast influenza and pneumonia risk levels.</div>
+</div>
+
+<div class="disease-grid">
+
+  <!-- Influenza -->
+  <div class="dcard fi d3">
+    <div class="dcard-header">
+      <div class="dcard-emoji-wrap">🤧</div>
+      <div>
+        <div class="dcard-title">Influenza (Flu)</div>
+        <div class="dcard-subtitle">Viral respiratory illness peaking in winter months</div>
+      </div>
+    </div>
+    <div class="dcard-tabs">
+      <div class="dtab active" onclick="switchTab(this,'fl')">Causes</div>
+      <div class="dtab" onclick="switchTab(this,'fl')">Symptoms</div>
+      <div class="dtab" onclick="switchTab(this,'fl')">Prevention</div>
+    </div>
+    <div class="dcard-panel active" data-group="fl">
+      <ul>
+        <li><span class="bullet"></span>Influenza A/B/C virus strains mutating annually</li>
+        <li><span class="bullet"></span>Airborne droplet transmission — sneezing, coughing</li>
+        <li><span class="bullet"></span>Crowded indoor environments with poor ventilation</li>
+        <li><span class="bullet"></span>Cold dry air reducing nasal mucus barrier effectiveness</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="fl">
+      <ul>
+        <li><span class="red-bullet bullet"></span>Sudden high fever (38–40°C) with chills</li>
+        <li><span class="red-bullet bullet"></span>Severe muscle aches and body pains</li>
+        <li><span class="red-bullet bullet"></span>Dry cough and sore throat</li>
+        <li><span class="red-bullet bullet"></span>Extreme fatigue and headache</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="fl">
+      <ul>
+        <li><span class="green-bullet bullet"></span>Annual flu vaccination is the most effective measure</li>
+        <li><span class="green-bullet bullet"></span>Wash hands regularly for at least 20 seconds</li>
+        <li><span class="green-bullet bullet"></span>Wear a mask in crowded or enclosed spaces</li>
+        <li><span class="green-bullet bullet"></span>Stay home when symptomatic to prevent spread</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Pneumonia -->
+  <div class="dcard fi d3" style="animation-delay:.38s">
+    <div class="dcard-header">
+      <div class="dcard-emoji-wrap">🫁</div>
+      <div>
+        <div class="dcard-title">Pneumonia &amp; Bronchitis</div>
+        <div class="dcard-subtitle">Lower respiratory tract infections common in cold months</div>
+      </div>
+    </div>
+    <div class="dcard-tabs">
+      <div class="dtab active" onclick="switchTab(this,'pn')">Causes</div>
+      <div class="dtab" onclick="switchTab(this,'pn')">Symptoms</div>
+      <div class="dtab" onclick="switchTab(this,'pn')">Prevention</div>
+    </div>
+    <div class="dcard-panel active" data-group="pn">
+      <ul>
+        <li><span class="bullet"></span>Streptococcus pneumoniae — the most common bacteria</li>
+        <li><span class="bullet"></span>Viral pneumonia following influenza infection</li>
+        <li><span class="bullet"></span>Cold air chronically irritating the bronchial lining</li>
+        <li><span class="bullet"></span>Weakened immunity in elderly and young children</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="pn">
+      <ul>
+        <li><span class="red-bullet bullet"></span>Persistent productive cough with coloured phlegm</li>
+        <li><span class="red-bullet bullet"></span>Sharp chest pain that worsens with breathing</li>
+        <li><span class="red-bullet bullet"></span>High fever with rigours and sweating</li>
+        <li><span class="red-bullet bullet"></span>Shortness of breath even at rest</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="pn">
+      <ul>
+        <li><span class="green-bullet bullet"></span>Pneumococcal vaccine — recommended for 65+ and children</li>
+        <li><span class="green-bullet bullet"></span>Keep warm; avoid cold drafts and damp environments</li>
+        <li><span class="green-bullet bullet"></span>Seek medical attention early for any respiratory symptoms</li>
+        <li><span class="green-bullet bullet"></span>Ensure good indoor air circulation and humidity</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Common Cold -->
+  <div class="dcard fi d4">
+    <div class="dcard-header">
+      <div class="dcard-emoji-wrap">🤒</div>
+      <div>
+        <div class="dcard-title">Common Cold &amp; Sore Throat</div>
+        <div class="dcard-subtitle">Rhinovirus infections spreading rapidly in winter air</div>
+      </div>
+    </div>
+    <div class="dcard-tabs">
+      <div class="dtab active" onclick="switchTab(this,'cc')">Causes</div>
+      <div class="dtab" onclick="switchTab(this,'cc')">Symptoms</div>
+      <div class="dtab" onclick="switchTab(this,'cc')">Prevention</div>
+    </div>
+    <div class="dcard-panel active" data-group="cc">
+      <ul>
+        <li><span class="bullet"></span>Rhinovirus — responsible for most common colds</li>
+        <li><span class="bullet"></span>Contact with contaminated surfaces and then face-touching</li>
+        <li><span class="bullet"></span>Coronavirus and RSV strains in winter months</li>
+        <li><span class="bullet"></span>Cold dry air reducing nasal immune defences</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="cc">
+      <ul>
+        <li><span class="red-bullet bullet"></span>Runny or blocked nose; frequent sneezing</li>
+        <li><span class="red-bullet bullet"></span>Sore or scratchy throat</li>
+        <li><span class="red-bullet bullet"></span>Mild fever and generalised fatigue</li>
+        <li><span class="red-bullet bullet"></span>Cough developing after nasal symptoms begin</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="cc">
+      <ul>
+        <li><span class="green-bullet bullet"></span>Wash hands for 20 seconds; sanitise frequently touched surfaces</li>
+        <li><span class="green-bullet bullet"></span>Cover mouth and nose when sneezing — use elbow, not hands</li>
+        <li><span class="green-bullet bullet"></span>Avoid sharing cups, utensils, or towels</li>
+        <li><span class="green-bullet bullet"></span>Boost immunity: Vitamin C, zinc, and adequate sleep</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Asthma -->
+  <div class="dcard fi d4" style="animation-delay:.52s">
+    <div class="dcard-header">
+      <div class="dcard-emoji-wrap">😮‍💨</div>
+      <div>
+        <div class="dcard-title">Asthma &amp; Respiratory Flare-ups</div>
+        <div class="dcard-subtitle">Cold air and allergens triggering airway constriction</div>
+      </div>
+    </div>
+    <div class="dcard-tabs">
+      <div class="dtab active" onclick="switchTab(this,'as')">Causes</div>
+      <div class="dtab" onclick="switchTab(this,'as')">Symptoms</div>
+      <div class="dtab" onclick="switchTab(this,'as')">Prevention</div>
+    </div>
+    <div class="dcard-panel active" data-group="as">
+      <ul>
+        <li><span class="bullet"></span>Cold air acting as a direct bronchial irritant</li>
+        <li><span class="bullet"></span>Indoor dust mites and mould spores in closed rooms</li>
+        <li><span class="bullet"></span>Air pollution and vehicle emissions in winter fog</li>
+        <li><span class="bullet"></span>Respiratory infections triggering underlying asthma</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="as">
+      <ul>
+        <li><span class="red-bullet bullet"></span>Wheezing — a whistling sound when breathing</li>
+        <li><span class="red-bullet bullet"></span>Tight chest and shortness of breath</li>
+        <li><span class="red-bullet bullet"></span>Persistent nighttime or early morning cough</li>
+        <li><span class="red-bullet bullet"></span>Blue-tinged lips in severe attacks — seek emergency care</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="as">
+      <ul>
+        <li><span class="green-bullet bullet"></span>Always carry prescribed inhaler — never skip doses</li>
+        <li><span class="green-bullet bullet"></span>Avoid early morning outdoor exercise in cold air</li>
+        <li><span class="green-bullet bullet"></span>Wrap a scarf over nose and mouth when outdoors</li>
+        <li><span class="green-bullet bullet"></span>Use air purifiers indoors; maintain indoor humidity 40–50%</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick Tips -->
+<div class="tips-section fi d5">
+  <div class="tips-header">❄️ Winter Wellness Tips</div>
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-icon">💉</div>
+      <div class="tip-title">Vaccinate Early</div>
+      <div class="tip-body">Get your annual flu vaccine before November. Pneumococcal vaccine is strongly recommended for the elderly, children under 5, and immunocompromised individuals.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🧤</div>
+      <div class="tip-title">Layer Up Smart</div>
+      <div class="tip-body">Dress in breathable, moisture-wicking layers. Keep extremities warm — hands, feet, and neck are major heat-loss areas. Avoid going out with wet hair.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🌬️</div>
+      <div class="tip-title">Indoor Air Quality</div>
+      <div class="tip-body">Ventilate rooms for 10 min daily despite cold. Use air purifiers, avoid indoor smoking, and keep humidity between 40–50% to reduce viral transmission.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab, group) {
+  const card = tab.closest('.dcard');
+  card.querySelectorAll('.dtab').forEach((t, i) => {
+    t.classList.remove('active');
+    if (t === tab) {
+      t.classList.add('active');
+      card.querySelectorAll(`.dcard-panel[data-group="${group}"]`).forEach((p, j) => {
+        p.classList.toggle('active', j === i);
+      });
+    }
+  });
+}
+</script>
+</body>
+</html>

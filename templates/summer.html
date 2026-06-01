@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EpiSense — Summer Season Health Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0e0a00;
+  --surface:#17110a;
+  --surface2:#1e1508;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(245,158,11,0.2);
+  --text:#f0ebe0;
+  --muted:#92835a;
+  --muted2:#bfab7a;
+  --sun:#f59e0b;
+  --sun2:#fbbf24;
+  --sun3:#fef3c7;
+  --sun-dim:rgba(245,158,11,0.1);
+  --sun-glow:rgba(245,158,11,0.2);
+  --red:#ef4444;
+  --red-dim:rgba(239,68,68,0.1);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden}
+
+.bg-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(180px);animation:drift 26s ease-in-out infinite alternate}
+.b1{width:1000px;height:700px;background:radial-gradient(circle,rgba(245,158,11,.22),rgba(239,68,68,.1),transparent 70%);top:-250px;right:-200px;opacity:1}
+.b2{width:600px;height:600px;background:radial-gradient(circle,rgba(251,191,36,.12),transparent 70%);bottom:-150px;left:-100px;animation-delay:-12s;opacity:1}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,-40px) scale(1.06)}}
+.scanlines{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.65) 100%)}
+
+/* NAV */
+nav{position:relative;z-index:20;display:flex;justify-content:space-between;align-items:center;
+  padding:20px 56px;border-bottom:1px solid var(--border);backdrop-filter:blur(12px)}
+.logo{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.4rem;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--sun),var(--red));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;text-decoration:none}
+.nav-r{display:flex;align-items:center;gap:12px}
+.back-btn{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--muted2);
+  font-size:.83rem;font-weight:600;padding:7px 14px;border-radius:30px;
+  border:1px solid var(--border);transition:all .2s}
+.back-btn:hover{border-color:var(--sun);color:var(--sun)}
+.season-chip{display:flex;align-items:center;gap:7px;padding:6px 16px;border-radius:30px;
+  background:var(--sun-dim);border:1px solid rgba(245,158,11,.25);
+  font-size:.73rem;font-weight:700;color:var(--sun);letter-spacing:.4px}
+
+/* PAGE HEADER */
+.page-header{position:relative;z-index:5;padding:52px 56px 36px;max-width:1100px;margin:0 auto}
+.season-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:30px;
+  background:var(--sun-dim);border:1px solid rgba(245,158,11,.22);
+  font-size:.68rem;font-weight:700;color:var(--sun);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+.page-title{font-family:'Outfit',sans-serif;font-weight:900;font-size:clamp(2.2rem,5vw,3.8rem);
+  letter-spacing:-2px;line-height:1.05;margin-bottom:14px}
+.page-title .accent{background:linear-gradient(135deg,var(--sun),var(--red));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-subtitle{font-size:1rem;color:var(--muted2);max-width:620px;line-height:1.7}
+
+/* FUTURE BANNER */
+.future-banner{position:relative;z-index:5;margin:0 56px 40px;max-width:988px;
+  background:rgba(245,158,11,.07);border:1px dashed rgba(245,158,11,.3);
+  border-radius:14px;padding:16px 22px;display:flex;align-items:center;gap:14px}
+.future-icon{font-size:1.4rem;flex-shrink:0}
+.future-text{font-size:.84rem;color:var(--muted2);line-height:1.6}
+.future-text strong{color:var(--sun)}
+
+/* DISEASE GRID */
+.disease-grid{position:relative;z-index:5;display:grid;grid-template-columns:repeat(2,1fr);
+  gap:18px;max-width:1100px;margin:0 auto;padding:0 56px 20px}
+
+.dcard{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;
+  transition:transform .3s cubic-bezier(.34,1.4,.64,1),border-color .3s,box-shadow .3s}
+.dcard:hover{transform:translateY(-6px);border-color:rgba(245,158,11,.3);
+  box-shadow:0 20px 50px rgba(245,158,11,.08)}
+
+.dcard-header{padding:22px 24px 0;display:flex;align-items:flex-start;gap:14px}
+.dcard-emoji-wrap{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;
+  justify-content:center;font-size:1.7rem;background:var(--sun-dim);border:1px solid rgba(245,158,11,.2);flex-shrink:0}
+.dcard-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:-.3px;
+  margin-bottom:4px;color:var(--sun2)}
+.dcard-subtitle{font-size:.76rem;color:var(--muted);font-weight:500}
+
+.dcard-tabs{display:flex;gap:0;padding:16px 24px 0;border-bottom:1px solid var(--border)}
+.dtab{padding:8px 14px;font-size:.73rem;font-weight:700;color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.3px;white-space:nowrap}
+.dtab.active{color:var(--sun);border-bottom-color:var(--sun)}
+.dtab:hover:not(.active){color:var(--muted2)}
+
+.dcard-panel{display:none;padding:18px 24px 22px}
+.dcard-panel.active{display:block;animation:panelIn .2s ease}
+@keyframes panelIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.dcard-panel ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:9px}
+.dcard-panel li{display:flex;align-items:flex-start;gap:9px;font-size:.84rem;color:var(--muted2);line-height:1.6}
+.bullet{width:6px;height:6px;border-radius:50%;background:var(--sun);flex-shrink:0;margin-top:7px}
+.red-bullet{background:var(--red)}
+.green-bullet{background:#22c55e}
+
+/* QUICK TIPS */
+.tips-section{position:relative;z-index:5;max-width:1100px;margin:0 auto;padding:28px 56px 56px}
+.tips-header{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.3px;
+  color:var(--sun);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.tips-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;
+  transition:border-color .2s}
+.tip-card:hover{border-color:rgba(245,158,11,.25)}
+.tip-icon{font-size:1.5rem;margin-bottom:10px}
+.tip-title{font-family:'Outfit',sans-serif;font-weight:700;font-size:.88rem;color:var(--sun2);margin-bottom:5px}
+.tip-body{font-size:.78rem;color:var(--muted2);line-height:1.6}
+
+/* FADE IN */
+.fi{opacity:0;transform:translateY(20px);animation:fadeIn .6s ease forwards}
+@keyframes fadeIn{to{opacity:1;transform:translateY(0)}}
+.d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.25s}
+.d4{animation-delay:.35s}.d5{animation-delay:.48s}.d6{animation-delay:.62s}
+
+@media(max-width:900px){
+  nav,.page-header,.future-banner,.disease-grid,.tips-section{padding-left:20px;padding-right:20px}
+  .future-banner{margin-left:20px;margin-right:20px}
+  .disease-grid{grid-template-columns:1fr}
+  .tips-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+</div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<nav>
+  <a href="/" class="logo">EpiSense</a>
+  <div class="nav-r">
+    <div class="season-chip">☀️ Summer Season</div>
+    <a href="/" class="back-btn">← Home</a>
+  </div>
+</nav>
+
+<div class="page-header fi d1">
+  <div class="season-eyebrow">☀️ March – May</div>
+  <h1 class="page-title">Summer Season<br><span class="accent">Disease Guide</span></h1>
+  <p class="page-subtitle">High temperatures and water contamination define summer health risks in India. Learn the causes, symptoms, and prevention strategies for each condition.</p>
+</div>
+
+<div class="future-banner fi d2">
+  <span class="future-icon">🚀</span>
+  <div class="future-text"><strong>Prediction models for this season will be added in future enhancements.</strong> A heat-index based Summer Disease Prediction module is planned — it will include temperature-driven risk scoring.</div>
+</div>
+
+<div class="disease-grid">
+
+  <!-- Heat Stroke -->
+  <div class="dcard fi d3">
+    <div class="dcard-header">
+      <div class="dcard-emoji-wrap">🌡️</div>
+      <div>
+        <div class="dcard-title">Heat Stroke &amp; Exhaustion</div>
+        <div class="dcard-subtitle">Thermoregulation failure from excessive heat exposure</div>
+      </div>
+    </div>
+    <div class="dcard-tabs">
+      <div class="dtab active" onclick="switchTab(this,'hs')">Causes</div>
+      <div class="dtab" onclick="switchTab(this,'hs')">Symptoms</div>
+      <div class="dtab" onclick="switchTab(this,'hs')">Prevention</div>
+    </div>
+    <div class="dcard-panel active" data-group="hs">
+      <ul>
+        <li><span class="bullet"></span>Prolonged sun or high-temperature exposure</li>
+        <li><span class="bullet"></span>Outdoor work during peak heat (12–4 PM)</li>
+        <li><span class="bullet"></span>Inadequate hydration in hot conditions</li>
+        <li><span class="bullet"></span>High-humidity environments blocking sweat evaporation</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="hs">
+      <ul>
+        <li><span class="red-bullet bullet"></span>Core body temperature above 40°C</li>
+        <li><span class="red-bullet bullet"></span>Confusion, disorientation, slurred speech</li>
+        <li><span class="red-bullet bullet"></span>Rapid, strong heartbeat</li>
+        <li><span class="red-bullet bullet"></span>Hot, red skin — absence of sweating (heat stroke)</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="hs">
+      <ul>
+        <li><span class="green-bullet bullet"></span>Avoid outdoor activity 12–4 PM in peak summer</li>
+        <li><span class="green-bullet bullet"></span>Drink 3–4 litres of water daily; do not wait until thirsty</li>
+        <li><span class="green-bullet bullet"></span>Wear light-coloured, loose, breathable clothing</li>
+        <li><span class="green-bullet bullet"></span>Use wet cloth on neck and wrists to cool down quickly</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Cholera -->
+  <div class="dcard fi d3" style="animation-delay:.42s">
+    <div class="dcard-header">
+      <div class="dcard-emoji-wrap">🦠</div>
+      <div>
+        <div class="dcard-title">Cholera &amp; Gastroenteritis</div>
+        <div class="dcard-subtitle">Waterborne bacterial infections peaking in summer heat</div>
+      </div>
+    </div>
+    <div class="dcard-tabs">
+      <div class="dtab active" onclick="switchTab(this,'ch')">Causes</div>
+      <div class="dtab" onclick="switchTab(this,'ch')">Symptoms</div>
+      <div class="dtab" onclick="switchTab(this,'ch')">Prevention</div>
+    </div>
+    <div class="dcard-panel active" data-group="ch">
+      <ul>
+        <li><span class="bullet"></span>Vibrio cholerae bacteria in contaminated water</li>
+        <li><span class="bullet"></span>Uncooked or improperly stored food in heat</li>
+        <li><span class="bullet"></span>Poor sanitation and open-air food handling</li>
+        <li><span class="bullet"></span>Sharing water sources with infected individuals</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="ch">
+      <ul>
+        <li><span class="red-bullet bullet"></span>Sudden onset of profuse, watery diarrhea</li>
+        <li><span class="red-bullet bullet"></span>Severe vomiting leading to rapid dehydration</li>
+        <li><span class="red-bullet bullet"></span>Muscle cramps and extreme weakness</li>
+        <li><span class="red-bullet bullet"></span>Sunken eyes, dry mouth — shock in severe cases</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="ch">
+      <ul>
+        <li><span class="green-bullet bullet"></span>Drink only boiled, filtered, or bottled water</li>
+        <li><span class="green-bullet bullet"></span>Wash hands thoroughly before eating and after toilet use</li>
+        <li><span class="green-bullet bullet"></span>Avoid raw street food in high-risk areas during summer</li>
+        <li><span class="green-bullet bullet"></span>Begin ORS immediately if diarrhea starts</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Conjunctivitis -->
+  <div class="dcard fi d4">
+    <div class="dcard-header">
+      <div class="dcard-emoji-wrap">👁️</div>
+      <div>
+        <div class="dcard-title">Conjunctivitis (Pink Eye)</div>
+        <div class="dcard-subtitle">Highly contagious eye infection surging in summer</div>
+      </div>
+    </div>
+    <div class="dcard-tabs">
+      <div class="dtab active" onclick="switchTab(this,'ce')">Causes</div>
+      <div class="dtab" onclick="switchTab(this,'ce')">Symptoms</div>
+      <div class="dtab" onclick="switchTab(this,'ce')">Prevention</div>
+    </div>
+    <div class="dcard-panel active" data-group="ce">
+      <ul>
+        <li><span class="bullet"></span>Adenovirus — spreads through direct contact</li>
+        <li><span class="bullet"></span>Bacterial infection via contaminated hands or surfaces</li>
+        <li><span class="bullet"></span>Swimming pool water with inadequate chlorination</li>
+        <li><span class="bullet"></span>Dust and UV exposure irritating the conjunctiva</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="ce">
+      <ul>
+        <li><span class="red-bullet bullet"></span>Redness, itching, burning in one or both eyes</li>
+        <li><span class="red-bullet bullet"></span>Watery or thick discharge; morning crusting</li>
+        <li><span class="red-bullet bullet"></span>Sensitivity to bright light</li>
+        <li><span class="red-bullet bullet"></span>Swollen eyelids and gritty feeling</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="ce">
+      <ul>
+        <li><span class="green-bullet bullet"></span>Wash hands frequently; avoid touching eyes in public</li>
+        <li><span class="green-bullet bullet"></span>Do not share towels, pillowcases, or eye drops</li>
+        <li><span class="green-bullet bullet"></span>Wear UV-protection sunglasses outdoors</li>
+        <li><span class="green-bullet bullet"></span>Seek antibiotic eye drops early for bacterial form</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Dehydration -->
+  <div class="dcard fi d4" style="animation-delay:.52s">
+    <div class="dcard-header">
+      <div class="dcard-emoji-wrap">💧</div>
+      <div>
+        <div class="dcard-title">Dehydration &amp; Heat Cramps</div>
+        <div class="dcard-subtitle">Fluid and electrolyte loss from prolonged heat exposure</div>
+      </div>
+    </div>
+    <div class="dcard-tabs">
+      <div class="dtab active" onclick="switchTab(this,'dh')">Causes</div>
+      <div class="dtab" onclick="switchTab(this,'dh')">Symptoms</div>
+      <div class="dtab" onclick="switchTab(this,'dh')">Prevention</div>
+    </div>
+    <div class="dcard-panel active" data-group="dh">
+      <ul>
+        <li><span class="bullet"></span>Excessive sweating without adequate fluid replacement</li>
+        <li><span class="bullet"></span>Diarrhea or vomiting causing rapid fluid loss</li>
+        <li><span class="bullet"></span>Strenuous physical exertion in high heat</li>
+        <li><span class="bullet"></span>Electrolyte imbalance from sodium and potassium loss</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="dh">
+      <ul>
+        <li><span class="red-bullet bullet"></span>Dark yellow or reduced urine output</li>
+        <li><span class="red-bullet bullet"></span>Dizziness, fatigue, and dry mouth</li>
+        <li><span class="red-bullet bullet"></span>Painful muscle spasms in legs and abdomen</li>
+        <li><span class="red-bullet bullet"></span>Rapid heartbeat, confusion in severe cases</li>
+      </ul>
+    </div>
+    <div class="dcard-panel" data-group="dh">
+      <ul>
+        <li><span class="green-bullet bullet"></span>Drink water even when not feeling thirsty</li>
+        <li><span class="green-bullet bullet"></span>Use ORS, coconut water, or electrolyte drinks</li>
+        <li><span class="green-bullet bullet"></span>Avoid caffeinated and alcoholic beverages in heat</li>
+        <li><span class="green-bullet bullet"></span>Rest in shade every 30–45 min during outdoor work</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick Tips -->
+<div class="tips-section fi d5">
+  <div class="tips-header">⚡ Summer Survival Tips</div>
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-icon">🕛</div>
+      <div class="tip-title">Timing Matters</div>
+      <div class="tip-body">Avoid direct sun exposure between 12 PM and 4 PM. Schedule outdoor activities for early morning or evening hours only.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🥤</div>
+      <div class="tip-title">Hydration First</div>
+      <div class="tip-body">Drink at least 3–4 litres daily. Include ORS, coconut water, or buttermilk. Keep a water bottle within arm's reach at all times.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🏠</div>
+      <div class="tip-title">Safe Food Habits</div>
+      <div class="tip-body">Eat freshly cooked food. Avoid street food stored in open air. Refrigerate leftovers promptly and never consume food left out for over 2 hours.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab, group) {
+  const card = tab.closest('.dcard');
+  // Update tab active states
+  card.querySelectorAll('.dtab').forEach((t, i) => {
+    t.classList.remove('active');
+    if (t === tab) {
+      t.classList.add('active');
+      // Show corresponding panel
+      card.querySelectorAll(`.dcard-panel[data-group="${group}"]`).forEach((p, j) => {
+        p.classList.toggle('active', j === i);
+      });
+    }
+  });
+}
+</script>
+</body>
+</html>

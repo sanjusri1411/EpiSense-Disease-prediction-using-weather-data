@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EpiSense — Rainy Season Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080e1a;--surface:#0d1526;--surface2:#111d33;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --text:#e8ecf4;--muted:#4e5e7a;--muted2:#8294b0;
+  --rain:#22d3ee;--rain-dim:rgba(34,211,238,0.1);--rain-glow:rgba(34,211,238,0.2);
+  --dengue:#f43f5e;--dengue-dim:rgba(244,63,94,0.1);--dengue-glow:rgba(244,63,94,0.18);
+  --malaria:#34d399;--malaria-dim:rgba(52,211,153,0.1);--malaria-glow:rgba(52,211,153,0.18);
+  --active-clr:var(--dengue);--active-glow:var(--dengue-glow);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* BACKGROUND */
+.bg-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(160px);animation:blobDrift 24s ease-in-out infinite alternate}
+.b1{width:800px;height:700px;background:radial-gradient(circle,rgba(244,63,94,.12),rgba(99,102,241,.06),transparent 70%);top:-300px;right:-200px}
+.b2{width:600px;height:600px;background:radial-gradient(circle,rgba(34,211,238,.08),transparent 70%);bottom:-150px;left:-100px;animation-delay:-11s}
+.b3{width:400px;height:400px;background:rgba(99,102,241,.06);top:40%;left:35%;animation-delay:-19s}
+@keyframes blobDrift{0%{transform:translate(0,0)}100%{transform:translate(30px,-40px)}}
+.scanlines{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.55) 100%)}
+
+/* ── COMPARE PANEL ── */
+#compare-sec{display:none;margin:0 auto 32px;max-width:1060px;padding:0 20px}
+.compare-hd{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.compare-hd h3{font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;color:var(--rain)}
+.compare-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;
+  background:rgba(10,16,32,.95);border:1px solid var(--border2);border-radius:20px;overflow:hidden}
+.cmp-col{padding:22px 24px;display:flex;flex-direction:column;gap:8px}
+.cmp-col.a{border-right:1px solid var(--border)}
+.cmp-col.b{border-left:1px solid var(--border)}
+.cmp-vs{display:flex;align-items:center;justify-content:center;padding:0 12px;
+  font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:var(--muted2)}
+.cmp-head{font-size:.65rem;text-transform:uppercase;letter-spacing:.9px;color:var(--muted)}
+.cmp-disease-tag{font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:10px;display:inline-block}
+.cmp-num{font-family:'Outfit',sans-serif;font-size:2.6rem;font-weight:900;line-height:1}
+.cmp-sub{font-size:.72rem;color:var(--muted2)}
+.cmp-risk-pill{font-size:.78rem;font-weight:700;padding:4px 13px;border-radius:20px;display:inline-block}
+.cmp-inputs{font-size:.71rem;color:var(--muted2);line-height:1.8}
+.cmp-verdict{font-size:.68rem;font-weight:800;letter-spacing:.5px;padding:3px 10px;
+  border-radius:12px;display:inline-block;margin-top:4px}
+.verdict-safe{background:rgba(52,211,153,.13);color:#34d399}
+.verdict-risk{background:rgba(244,63,94,.13);color:#f43f5e}
+.verdict-equal{background:rgba(34,211,238,.1);color:var(--rain)}
+#clear-compare-btn{font-size:.72rem;background:none;border:1px solid var(--border2);
+  color:var(--muted2);padding:4px 12px;border-radius:10px;cursor:pointer;margin-left:auto}
+#clear-compare-btn:hover{border-color:var(--muted2);color:var(--text)}
+
+/* ── ACTION BUTTONS below results ── */
+#dl-report-btn,#pin-compare-btn{display:none;width:100%;padding:11px;border-radius:12px;
+  font-size:.82rem;font-weight:700;cursor:pointer;transition:all .25s;
+  font-family:'Nunito',sans-serif;margin-top:8px}
+#dl-report-btn{background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);color:var(--rain)}
+#dl-report-btn:hover{background:rgba(34,211,238,.16);border-color:var(--rain)}
+#pin-compare-btn{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text)}
+#pin-compare-btn:hover{background:rgba(255,255,255,.09)}
+
+/* ── PRINT REPORT ── */
+#print-report{display:none}
+@media print{
+  body>*{display:none!important}
+  #print-report{display:block!important;font-family:Arial,sans-serif;padding:32px;color:#111}
+  #print-report h1{color:#1a1f5e;font-size:1.6rem;margin-bottom:4px}
+  #print-report .pr-sub{color:#555;font-size:.85rem;margin-bottom:24px}
+  #print-report .pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+  #print-report .pr-box{border:1px solid #ddd;border-radius:8px;padding:16px}
+  #print-report .pr-lbl{font-size:.7rem;text-transform:uppercase;color:#888;margin-bottom:4px}
+  #print-report .pr-val{font-size:2rem;font-weight:900;color:#1a1f5e}
+  #print-report .pr-risk{font-size:1rem;font-weight:700;padding:4px 14px;border-radius:20px;display:inline-block;margin-top:6px}
+  #print-report .risk-low{background:#d1fae5;color:#065f46}
+  #print-report .risk-mod{background:#fef3c7;color:#92400e}
+  #print-report .risk-high{background:#fee2e2;color:#991b1b}
+  #print-report .pr-inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  #print-report .pr-inp-box{border:1px solid #eee;border-radius:8px;padding:12px;text-align:center}
+  #print-report .pr-footer{font-size:.72rem;color:#888;border-top:1px solid #eee;padding-top:12px}
+}
+
+/* CRITICAL BANNER */
+#crit-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:3000;
+  background:linear-gradient(90deg,#7f1d1d,#dc2626,#7f1d1d);background-size:300% 100%;
+  animation:bannerSlide 4s linear infinite;padding:11px 24px;text-align:center;
+  font-weight:700;font-size:.84rem;font-family:'Outfit',sans-serif;letter-spacing:.2px}
+@keyframes bannerSlide{0%{background-position:0%}100%{background-position:300%}}
+#crit-banner button{margin-left:12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  color:#fff;padding:3px 12px;border-radius:20px;font-size:.75rem;cursor:pointer}
+
+/* NAV */
+nav{position:relative;z-index:20;display:flex;justify-content:space-between;align-items:center;
+  padding:18px 50px;border-bottom:1px solid var(--border)}
+.logo{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.35rem;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--rain),#6366f1);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;text-decoration:none}
+.nav-r{display:flex;align-items:center;gap:14px}
+.live-pill{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:30px;
+  background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.18);
+  font-size:.73rem;font-weight:700;color:var(--rain);letter-spacing:.3px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--rain);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.back-link{color:var(--muted2);text-decoration:none;font-size:.82rem;font-weight:600;
+  display:flex;align-items:center;gap:5px;transition:color .2s;
+  padding:6px 12px;border-radius:20px;border:1px solid var(--border)}
+.back-link:hover{color:var(--text);border-color:var(--border2)}
+
+/* DISEASE TABS */
+.tabs-row{position:relative;z-index:5;display:flex;justify-content:center;gap:10px;padding:28px 40px 0}
+.dtab{display:flex;align-items:center;gap:9px;padding:11px 26px;border-radius:12px;
+  border:1.5px solid var(--border);background:rgba(255,255,255,.025);
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:.9rem;
+  cursor:pointer;transition:all .3s;color:var(--muted2);letter-spacing:.2px}
+.dtab:hover{border-color:var(--border2);color:var(--text)}
+.tab-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:all .3s}
+.dtab.ad{background:rgba(244,63,94,.1);border-color:var(--dengue);color:var(--dengue)}
+.dtab.ad .tab-dot{background:var(--dengue);box-shadow:0 0 10px var(--dengue)}
+.dtab.am{background:rgba(52,211,153,.1);border-color:var(--malaria);color:var(--malaria)}
+.dtab.am .tab-dot{background:var(--malaria);box-shadow:0 0 10px var(--malaria)}
+
+/* MAIN LAYOUT */
+.wrap{position:relative;z-index:5;max-width:1400px;margin:0 auto;padding:24px 44px 64px}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:24px;margin-bottom:36px}
+
+/* INPUT PANEL */
+.input-panel{background:rgba(10,16,32,.9);border:1px solid var(--border);
+  border-radius:20px;padding:26px;position:sticky;top:20px;height:fit-content;
+  backdrop-filter:blur(24px)}
+.panel-hd{display:flex;align-items:center;gap:11px;margin-bottom:24px;
+  padding-bottom:18px;border-bottom:1px solid var(--border)}
+.p-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;
+  justify-content:center;font-size:1.2rem;background:rgba(244,63,94,.12);flex-shrink:0}
+.p-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:.98rem;letter-spacing:.1px}
+.p-sub{font-size:.73rem;color:var(--muted2);margin-top:1px}
+
+.igroup{margin-bottom:18px}
+.ilabel{display:flex;align-items:center;justify-content:space-between;
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.9px;color:var(--muted2);
+  font-weight:700;margin-bottom:8px}
+.tip{cursor:help;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;
+  font-size:.62rem;color:var(--muted2);position:relative}
+.tip:hover::after{content:attr(data-tip);position:absolute;right:0;top:22px;
+  background:#0a1020;border:1px solid var(--border2);color:var(--text);
+  padding:9px 13px;border-radius:10px;font-size:.74rem;width:210px;line-height:1.55;
+  z-index:200;font-family:'Nunito',sans-serif;font-weight:500;text-transform:none;
+  letter-spacing:0;pointer-events:none;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.ninput{width:100%;padding:10px 13px;background:rgba(0,0,0,.45);
+  border:1.5px solid var(--border);border-radius:10px;color:var(--text);
+  font-size:.93rem;font-family:'Nunito',sans-serif;transition:border .25s,box-shadow .25s;outline:none}
+.ninput:focus{border-color:var(--active-clr);box-shadow:0 0 0 3px var(--active-glow)}
+.ninput::placeholder{color:rgba(255,255,255,.16)}
+.rrow{display:flex;align-items:center;gap:9px;margin-top:6px}
+.rrow input[type=range]{flex:1;height:4px;accent-color:var(--active-clr);cursor:pointer}
+.rval{font-size:.79rem;color:var(--active-clr);font-weight:700;min-width:46px;text-align:right;
+  font-family:'Outfit',sans-serif}
+
+.pbtn{width:100%;padding:13px;border:none;border-radius:12px;
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:.93rem;
+  letter-spacing:.5px;cursor:pointer;transition:all .3s;margin-top:6px}
+.dengue-btn{background:linear-gradient(135deg,#f43f5e,#be185d);color:#fff}
+.dengue-btn:hover{box-shadow:0 8px 30px rgba(244,63,94,.38);transform:translateY(-2px)}
+.malaria-btn{background:linear-gradient(135deg,#34d399,#059669);color:#001a10}
+.malaria-btn:hover{box-shadow:0 8px 30px rgba(52,211,153,.38);transform:translateY(-2px)}
+.pbtn:active{transform:translateY(0)!important;box-shadow:none!important}
+.pbtn.loading{opacity:.6;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.25);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;
+  margin-right:7px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.errbox{display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);
+  color:#f87171;border-radius:10px;padding:11px;margin-top:10px;font-size:.8rem;line-height:1.5}
+.errbox.show{display:block}
+
+.presets-lbl{font-size:.67rem;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);
+  font-weight:700;margin-bottom:9px}
+.preset-btns{display:flex;gap:6px;flex-wrap:wrap}
+.preset-btn{background:rgba(255,255,255,.04);border:1px solid var(--border);
+  color:var(--muted2);padding:5px 11px;border-radius:20px;font-size:.72rem;
+  cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif;font-weight:600}
+.preset-btn:hover{border-color:var(--active-clr);color:var(--active-clr)}
+
+/* RESULT PANEL */
+.rpanel{display:flex;flex-direction:column;gap:16px}
+
+.info-await{background:rgba(10,16,32,.9);border:1px solid var(--border);
+  border-radius:18px;padding:24px;backdrop-filter:blur(20px)}
+.info-await h3{font-family:'Outfit',sans-serif;font-weight:800;font-size:.95rem;
+  margin-bottom:14px;color:var(--active-clr)}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:var(--muted2);line-height:1.55}
+.sn{flex-shrink:0;width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:.7rem;color:var(--text)}
+.did-know{margin-top:20px;padding:14px 16px;background:rgba(34,211,238,.04);
+  border:1px solid rgba(34,211,238,.12);border-radius:12px;font-size:.79rem;
+  color:var(--muted2);line-height:1.65}
+
+.rcards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rcard{background:rgba(10,16,32,.9);border:1px solid var(--border);border-radius:16px;
+  padding:20px;backdrop-filter:blur(20px);transition:all .5s;opacity:0;transform:translateY(14px)}
+.rcard.show{opacity:1;transform:translateY(0)}
+.rcard-lbl{font-size:.67rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:10px;font-weight:700}
+.rcard-val{font-family:'Outfit',sans-serif;font-weight:900;font-size:2.5rem;letter-spacing:-2px;line-height:1}
+.rcard-sub{font-size:.77rem;color:var(--muted2);margin-top:6px}
+.rcard-risk{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.4rem;letter-spacing:-.5px}
+
+.gauge-card{background:rgba(10,16,32,.9);border:1px solid var(--border);
+  border-radius:16px;padding:20px;backdrop-filter:blur(20px);
+  transition:all .5s;opacity:0;transform:translateY(14px)}
+.gauge-card.show{opacity:1;transform:translateY(0)}
+.gauge-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.gauge-lbl{font-size:.67rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);font-weight:700}
+.rpill{padding:4px 13px;border-radius:20px;font-family:'Outfit',sans-serif;font-size:.77rem;font-weight:800;letter-spacing:.4px}
+.rpill.low{background:rgba(34,197,94,.12);color:#4ade80}
+.rpill.moderate{background:rgba(234,179,8,.12);color:#facc15}
+.rpill.high{background:rgba(239,68,68,.12);color:#f87171}
+.gauge-track{width:100%;height:9px;background:rgba(255,255,255,.06);border-radius:10px;
+  overflow:hidden;margin-bottom:9px;border:1px solid rgba(255,255,255,.05)}
+.gauge-fill{height:100%;width:0%;border-radius:10px;
+  background:linear-gradient(90deg,#4ade80 0%,#facc15 50%,#f87171 100%);
+  transition:width 1.6s cubic-bezier(.34,1.2,.64,1)}
+.gauge-lbls{display:flex;justify-content:space-between;font-size:.68rem;font-weight:700}
+.gauge-lbls span:nth-child(1){color:#4ade80}.gauge-lbls span:nth-child(2){color:#facc15}.gauge-lbls span:nth-child(3){color:#f87171}
+
+.alert-card{display:none;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.22);
+  border-radius:16px;padding:18px 20px}
+.alert-card.show{display:flex;align-items:flex-start;gap:12px;animation:slideUp .4s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.al-icon{font-size:1.5rem;flex-shrink:0}
+.al-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:.88rem;color:#f87171;margin-bottom:3px}
+.al-body{font-size:.79rem;color:rgba(248,113,113,.8);line-height:1.6}
+
+/* CHARTS */
+.charts-sec{margin-top:6px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.3px}
+.sec-tag{background:rgba(255,255,255,.04);border:1px solid var(--border);
+  color:var(--muted2);font-size:.69rem;padding:4px 12px;border-radius:20px;letter-spacing:.4px;font-weight:600}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:14px}
+
+.chart-card{background:rgba(10,16,32,.9);border:1px solid var(--border);border-radius:16px;
+  padding:14px;backdrop-filter:blur(20px);cursor:zoom-in;transition:all .3s;overflow:hidden;position:relative}
+.chart-card:hover{border-color:var(--border2);transform:translateY(-5px);
+  box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.chart-card:hover .zoom-badge{opacity:1}
+.chart-card:hover .chart-img{transform:scale(1.04)}
+.chart-card h4{font-size:.67rem;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--muted2);margin-bottom:10px;font-weight:700;font-family:'Outfit',sans-serif}
+.chart-img{width:100%;border-radius:8px;object-fit:cover;height:155px;
+  background:rgba(255,255,255,.03);display:block;transition:transform .4s}
+.zoom-badge{position:absolute;bottom:20px;right:14px;background:rgba(0,0,0,.75);
+  border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.85);
+  padding:3px 9px;border-radius:20px;font-size:.67rem;opacity:0;
+  transition:opacity .25s;pointer-events:none;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:.3px}
+
+/* ZOOM LIGHTBOX */
+#zoom-bg{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(18px);
+  z-index:600;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:20px;cursor:zoom-out}
+#zoom-bg.open{display:flex;animation:fadeOv .22s ease}
+@keyframes fadeOv{from{opacity:0}to{opacity:1}}
+#zoom-close{position:fixed;top:20px;right:24px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);color:#fff;width:38px;height:38px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;cursor:pointer;transition:background .2s;z-index:610}
+#zoom-close:hover{background:rgba(255,255,255,.2)}
+#zoom-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:1rem;
+  color:#fff;letter-spacing:-.3px}
+#zoom-box{border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);
+  animation:zoomPop .32s cubic-bezier(.34,1.4,.64,1);max-width:90vw;cursor:default}
+@keyframes zoomPop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+#zoom-img{display:block;max-width:90vw;max-height:80vh;object-fit:contain}
+
+/* CHATBOT */
+#chatbot-fab{position:fixed;bottom:26px;right:26px;width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--dengue),var(--malaria));border:none;cursor:pointer;
+  font-size:1.4rem;box-shadow:0 4px 24px rgba(244,63,94,.28);transition:transform .3s;z-index:400}
+#chatbot-fab:hover{transform:scale(1.12)}
+#chatbot-win{position:fixed;bottom:88px;right:26px;width:338px;height:490px;
+  background:#080e1a;border:1px solid var(--border);border-radius:20px;
+  display:none;flex-direction:column;overflow:hidden;z-index:400;
+  box-shadow:0 24px 64px rgba(0,0,0,.7)}
+#chatbot-win.open{display:flex;animation:chatUp .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes chatUp{from{opacity:0;transform:scale(.88) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+#chat-hd{padding:12px 14px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center}
+#chat-hd-l{display:flex;align-items:center;gap:9px}
+.cav{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--dengue),var(--malaria));
+  display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.cnm{font-family:'Outfit',sans-serif;font-weight:800;font-size:.8rem}
+.cst{font-size:.66rem;color:var(--rain);display:flex;align-items:center;gap:4px}
+.cst::before{content:'';width:5px;height:5px;background:var(--rain);border-radius:50%}
+#chat-x{background:none;border:none;color:var(--muted2);font-size:1.1rem;cursor:pointer;padding:4px}
+#chat-msgs{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:9px}
+#chat-msgs::-webkit-scrollbar{width:2px}
+#chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:.81rem;line-height:1.55;animation:msgIn .2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg.bot{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);border-bottom-left-radius:3px;align-self:flex-start}
+.msg.user{background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.2);border-bottom-right-radius:3px;align-self:flex-end;color:#fda4af}
+.msg.warn{background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.25);align-self:flex-start;border-bottom-left-radius:3px;color:#f87171}
+#chat-chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-top:1px solid var(--border)}
+.chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  color:var(--muted2);padding:4px 9px;border-radius:20px;font-size:.7rem;cursor:pointer;transition:all .2s}
+.chip:hover{border-color:var(--dengue);color:var(--dengue)}
+#chat-ir{display:flex;gap:7px;padding:9px 12px;border-top:1px solid var(--border)}
+#chat-inp{flex:1;padding:8px 12px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);border-radius:20px;color:var(--text);
+  font-size:.8rem;outline:none;font-family:'Nunito',sans-serif;transition:border .2s}
+#chat-inp:focus{border-color:var(--dengue)}
+#chat-send{width:33px;height:33px;border-radius:50%;background:var(--dengue);border:none;
+  color:#fff;font-size:.88rem;cursor:pointer;transition:transform .2s;flex-shrink:0}
+#chat-send:hover{transform:scale(1.1)}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.grid{grid-template-columns:1fr}.input-panel{position:relative}}
+@media(max-width:768px){
+  nav{padding:14px 20px}
+  .wrap{padding:18px 18px 50px}
+  .tabs-row{padding:22px 18px 0}
+  .rcards{grid-template-columns:1fr}
+  .charts-grid{grid-template-columns:1fr}
+  #chatbot-win{width:calc(100vw - 34px);right:17px}
+}
+</style>
+</head>
+<body>
+
+<div id="crit-banner">
+  🚨 <span id="crit-msg">Critical risk detected.</span> Notify health authorities immediately.
+  <button onclick="document.getElementById('crit-banner').style.display='none'">Dismiss</button>
+</div>
+
+<div class="bg-wrap">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<nav>
+  <a href="/" class="logo">EpiSense</a>
+  <div class="nav-r">
+    <div class="live-pill"><span class="dot"></span>🌧️ Rainy Season — Live Model</div>
+    <a href="/" class="back-link">← Home</a>
+  </div>
+</nav>
+
+<div class="tabs-row">
+  <div class="dtab ad" id="tab-dengue" onclick="switchDisease('dengue')">
+    <span class="tab-dot"></span>🦟 Dengue
+  </div>
+  <div class="dtab" id="tab-malaria" onclick="switchDisease('malaria')">
+    <span class="tab-dot"></span>🩸 Malaria
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="grid">
+
+    <!-- INPUT PANEL -->
+    <div class="input-panel">
+      <div class="panel-hd">
+        <div class="p-icon" id="p-icon">🦟</div>
+        <div>
+          <div class="p-title" id="p-title">Dengue Predictor</div>
+          <div class="p-sub">Enter environmental parameters</div>
+        </div>
+      </div>
+
+      <div class="igroup">
+        <div class="ilabel">🌡️ Temperature (°C)
+          <span class="tip" data-tip="Optimal mosquito breeding: 25–32°C. Higher temps shorten parasite incubation by 2–3 days.">?</span>
+        </div>
+        <input type="number" class="ninput" id="inp-temp" value="28" min="0" max="50" step="0.1" placeholder="e.g. 28">
+        <div class="rrow"><input type="range" id="rng-temp" min="0" max="50" step="0.1" value="28"><span class="rval" id="val-temp">28°C</span></div>
+      </div>
+
+      <div class="igroup">
+        <div class="ilabel">💧 Rainfall (mm/month)
+          <span class="tip" data-tip="Rainfall creates stagnant water pools. Transmission effect peaks 2–4 weeks after heavy rain.">?</span>
+        </div>
+        <input type="number" class="ninput" id="inp-rain" value="150" min="0" max="1000" step="1" placeholder="e.g. 150">
+        <div class="rrow"><input type="range" id="rng-rain" min="0" max="1000" step="1" value="150"><span class="rval" id="val-rain">150mm</span></div>
+      </div>
+
+      <div class="igroup">
+        <div class="ilabel">📅 Month
+          <span class="tip" data-tip="Peak dengue: July–October. Malaria peaks August–September in most Indian regions.">?</span>
+        </div>
+        <input type="number" class="ninput" id="inp-month" value="8" min="1" max="12" step="1" placeholder="1–12">
+        <div class="rrow"><input type="range" id="rng-month" min="1" max="12" step="1" value="8"><span class="rval" id="val-month">Aug</span></div>
+      </div>
+
+      <button class="pbtn dengue-btn" id="predict-btn" onclick="runPrediction()">🚀 Run Prediction</button>
+      <div class="errbox" id="err-box"></div>
+
+      <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border)">
+        <div class="presets-lbl">Quick Presets</div>
+        <div class="preset-btns">
+          <button class="preset-btn" onclick="setPreset(30,250,8)">🌧️ Peak Monsoon</button>
+          <button class="preset-btn" onclick="setPreset(28,80,3)">🌤️ Pre-Monsoon</button>
+          <button class="preset-btn" onclick="setPreset(32,15,5)">☀️ Dry Season</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div class="rpanel">
+
+      <div class="info-await" id="info-panel">
+        <h3 id="info-title">🦟 Dengue — Awaiting Input</h3>
+        <div class="steps">
+          <div class="step"><span class="sn">1</span>Set temperature, rainfall and month using sliders or inputs</div>
+          <div class="step"><span class="sn">2</span>Click "Run Prediction" for the AI-powered forecast</div>
+          <div class="step"><span class="sn">3</span>View predicted case load, risk level, and severity gauge</div>
+          <div class="step"><span class="sn">4</span>Scroll down to explore historical analysis charts</div>
+          <div class="step"><span class="sn">5</span><strong>Click any chart to open a full-screen zoom view</strong></div>
+        </div>
+        <div class="did-know">
+          <strong style="color:var(--rain)">💡 Did you know?</strong><br>
+          This model was trained on <strong style="color:var(--text)">5 years</strong> of monthly disease surveillance combined with meteorological records from Indian health districts.
+        </div>
+      </div>
+
+      <div id="result-area" style="display:none;flex-direction:column;gap:16px">
+        <div class="rcards">
+          <div class="rcard" id="r-cases">
+            <div class="rcard-lbl">Forecasted Case Load</div>
+            <div class="rcard-val" id="r-num">—</div>
+            <div class="rcard-sub">predicted cases</div>
+          </div>
+          <div class="rcard" id="r-risk">
+            <div class="rcard-lbl">Risk Assessment</div>
+            <div class="rcard-risk" id="r-risk-val">—</div>
+            <div class="rcard-sub" id="r-risk-sub">awaiting prediction</div>
+          </div>
+        </div>
+        <div class="gauge-card" id="r-gauge">
+          <div class="gauge-hd">
+            <span class="gauge-lbl">Risk Severity Scale</span>
+            <span class="rpill moderate" id="r-pill">—</span>
+          </div>
+          <div class="gauge-track"><div class="gauge-fill" id="g-fill"></div></div>
+          <div class="gauge-lbls"><span>LOW</span><span>MODERATE</span><span>CRITICAL</span></div>
+        </div>
+        <div class="alert-card" id="r-alert">
+          <span class="al-icon">🚨</span>
+          <div>
+            <div class="al-title">Critical Risk Detected</div>
+            <div class="al-body" id="r-alert-msg">Immediate intervention recommended.</div>
+          </div>
+        </div>
+        <button id="pin-compare-btn" onclick="pinScenario()">📌 Pin as Scenario A &amp; Compare</button>
+        <button id="dl-report-btn" onclick="downloadReport()">📋 Download Prediction Report</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- COMPARE PANEL -->
+  <div id="compare-sec">
+    <div class="compare-hd">
+      <h3>⚖️ Scenario Comparison</h3>
+      <button id="clear-compare-btn" onclick="clearCompare()">✕ Clear</button>
+    </div>
+    <div class="compare-grid">
+      <div class="cmp-col a" id="cmp-a"></div>
+      <div class="cmp-vs">VS</div>
+      <div class="cmp-col b" id="cmp-b"></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-sec">
+    <div class="sec-hd">
+      <span class="sec-title" id="charts-title">📊 Dengue — Historical Analysis</span>
+      <span class="sec-tag">🔍 Click any chart to zoom</span>
+    </div>
+    <div class="charts-grid" id="charts-grid"></div>
+  </div>
+</div>
+
+<!-- PRINT REPORT (hidden, shown only on print) -->
+<div id="print-report"></div>
+
+<!-- ZOOM LIGHTBOX -->
+<div id="zoom-bg" onclick="closeZoom(event)">
+  <button id="zoom-close" onclick="closeZoomBtn()">✕</button>
+  <div id="zoom-title"></div>
+  <div id="zoom-box" onclick="event.stopPropagation()">
+    <img id="zoom-img" src="" alt="">
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<button id="chatbot-fab" onclick="toggleChat()" title="Health Assistant">🤖</button>
+<div id="chatbot-win">
+  <div id="chat-hd">
+    <div id="chat-hd-l">
+      <div class="cav">🤖</div>
+      <div><div class="cnm">Health Assistant</div><div class="cst">● Online</div></div>
+    </div>
+    <button id="chat-x" onclick="toggleChat()">✕</button>
+  </div>
+  <div id="chat-msgs"></div>
+  <div id="chat-chips">
+    <span class="chip" onclick="chipSend(this)">Current result</span>
+    <span class="chip" onclick="chipSend(this)">Symptoms</span>
+    <span class="chip" onclick="chipSend(this)">Prevention tips</span>
+    <span class="chip" onclick="chipSend(this)">High risk months</span>
+    <span class="chip" onclick="chipSend(this)">Causes</span>
+    <span class="chip" onclick="chipSend(this)">Foods to eat</span>
+    <span class="chip" onclick="chipSend(this)">Show trend chart</span>
+    <span class="chip" onclick="chipSend(this)">Show heatmap</span>
+  </div>
+  <div id="chat-ir">
+    <input id="chat-inp" type="text" placeholder="Ask anything health-related..." onkeydown="if(event.key==='Enter')chatSend()">
+    <button id="chat-send" onclick="chatSend()">➤</button>
+  </div>
+</div>
+
+<script>
+let activeDisease='dengue', lastPred=null, chatOpen=false;
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CHARTS={
+  dengue:[
+    {key:'rainfall',title:'Rainfall Correlation',src:'images/dengue/Rainfall.jpeg'},
+    {key:'temp',title:'Temperature Impact',src:'images/dengue/temp.jpeg'},
+    {key:'monthly',title:'Monthly Distribution',src:'images/dengue/monthly.jpeg'},
+    {key:'actual',title:'Actual vs Predicted',src:'images/dengue/Actual vs Predicted (D).png'},
+    {key:'avg',title:'Avg Cases by Month',src:'images/dengue/Avg Cases (D).png'},
+    {key:'casemon',title:'Cases by Month',src:'images/dengue/Cases by Month (D).png'},
+    {key:'matrix',title:'Confusion Matrix',src:'images/dengue/Confusion Matrix (D).png'},
+    {key:'heatmap',title:'Correlation Heatmap',src:'images/dengue/heatmap.jpeg'},
+  ],
+  malaria:[
+    {key:'trend',title:'Case Trend',src:'images/malaria/malaria_trend.png'},
+    {key:'rainfall',title:'Rainfall Correlation',src:'images/malaria/rainfall.png'},
+    {key:'temp',title:'Temperature Impact',src:'images/malaria/temp.png'},
+    {key:'monthly',title:'Monthly Distribution',src:'images/malaria/malaria_monthly.png'},
+    {key:'actual',title:'Actual vs Predicted',src:'images/malaria/malaria_predicted.png'},
+    {key:'matrix',title:'Confusion Matrix',src:'images/malaria/malaria_confusion_matrix.png'},
+    {key:'heatmap',title:'Correlation Heatmap',src:'images/malaria/malaria_heatmap.png'},
+  ]
+};
+
+// Input sync
+function sync(nId,rId,vId,fmt){
+  const n=document.getElementById(nId),r=document.getElementById(rId),v=document.getElementById(vId);
+  const u=x=>v.textContent=fmt(x);
+  n.addEventListener('input',()=>{r.value=n.value;u(n.value)});
+  r.addEventListener('input',()=>{n.value=r.value;u(r.value)});
+}
+sync('inp-temp','rng-temp','val-temp',v=>v+'°C');
+sync('inp-rain','rng-rain','val-rain',v=>v+'mm');
+sync('inp-month','rng-month','val-month',v=>MONTHS[+v-1]||v);
+
+// Disease switch
+function switchDisease(d){
+  activeDisease=d;
+  const isD=d==='dengue';
+  const clr=isD?'var(--dengue)':'var(--malaria)';
+  document.getElementById('tab-dengue').className='dtab'+(isD?' ad':'');
+  document.getElementById('tab-malaria').className='dtab'+(!isD?' am':'');
+  document.getElementById('p-icon').textContent=isD?'🦟':'🩸';
+  document.getElementById('p-icon').style.background=isD?'rgba(244,63,94,.12)':'rgba(52,211,153,.12)';
+  document.getElementById('p-title').textContent=isD?'Dengue Predictor':'Malaria Predictor';
+  const btn=document.getElementById('predict-btn');
+  btn.className='pbtn '+(isD?'dengue-btn':'malaria-btn');
+  document.querySelectorAll('.ninput').forEach(el=>el.style.setProperty('--active-clr',isD?'var(--dengue)':'var(--malaria)'));
+  document.querySelectorAll('input[type=range]').forEach(el=>el.style.accentColor=isD?'#f43f5e':'#34d399');
+  document.querySelectorAll('.rval').forEach(el=>el.style.color=isD?'var(--dengue)':'var(--malaria)');
+  document.documentElement.style.setProperty('--active-clr',isD?'var(--dengue)':'var(--malaria)');
+  document.documentElement.style.setProperty('--active-glow',isD?'var(--dengue-glow)':'var(--malaria-glow)');
+  document.getElementById('info-title').textContent=isD?'🦟 Dengue — Awaiting Input':'🩸 Malaria — Awaiting Input';
+  document.getElementById('info-title').style.color=clr;
+  document.getElementById('charts-title').textContent=isD?'📊 Dengue — Historical Analysis':'📊 Malaria — Historical Analysis';
+  renderCharts();hideResults();
+}
+
+// Presets
+function setPreset(t,r,m){
+  ['inp-temp','rng-temp'].forEach(id=>document.getElementById(id).value=t);
+  ['inp-rain','rng-rain'].forEach(id=>document.getElementById(id).value=r);
+  ['inp-month','rng-month'].forEach(id=>document.getElementById(id).value=m);
+  document.getElementById('val-temp').textContent=t+'°C';
+  document.getElementById('val-rain').textContent=r+'mm';
+  document.getElementById('val-month').textContent=MONTHS[m-1];
+}
+
+// Charts
+function renderCharts(){
+  const grid=document.getElementById('charts-grid');grid.innerHTML='';
+  CHARTS[activeDisease].forEach(c=>{
+    const card=document.createElement('div');card.className='chart-card';card.dataset.chart=c.key;
+    card.innerHTML=`<h4>${c.title}</h4><img class="chart-img" src="/static/${c.src}" alt="${c.title}" loading="lazy"><span class="zoom-badge">🔍 Expand</span>`;
+    card.onclick=()=>openZoom(c.src,c.title);
+    grid.appendChild(card);
+  });
+}
+
+// Zoom
+function openZoom(src,title){
+  document.getElementById('zoom-img').src='/static/'+src;
+  document.getElementById('zoom-title').textContent=title;
+  document.getElementById('zoom-bg').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeZoom(e){if(e.target===document.getElementById('zoom-bg'))closeZoomBtn()}
+function closeZoomBtn(){document.getElementById('zoom-bg').classList.remove('open');document.body.style.overflow=''}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeZoomBtn()});
+
+// Prediction
+function runPrediction(){
+  const btn=document.getElementById('predict-btn'),err=document.getElementById('err-box');
+  err.classList.remove('show');
+  const temp=parseFloat(document.getElementById('inp-temp').value);
+  const rain=parseFloat(document.getElementById('inp-rain').value);
+  const month=parseInt(document.getElementById('inp-month').value);
+  if([temp,rain,month].some(isNaN)){err.textContent='❌ Please fill all fields.';err.classList.add('show');return}
+  btn.classList.add('loading');btn.innerHTML='<span class="spin"></span>Analysing...';
+  fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({disease:activeDisease,temp,rainfall:rain,month})})
+  .then(r=>r.json()).then(data=>{
+    if(data.success)showResults(data,temp,rain,month);
+    else{err.textContent='❌ '+(data.error||'Prediction failed.');err.classList.add('show')}
+  }).catch(e=>{err.textContent='❌ Network error: '+e.message;err.classList.add('show')})
+  .finally(()=>{btn.classList.remove('loading');btn.innerHTML='🚀 Run Prediction'});
+}
+
+function showResults(data,temp,rain,month){
+  const cases=Math.round(data.prediction),risk=data.risk_level;
+  const isD=activeDisease==='dengue',clr=isD?'var(--dengue)':'var(--malaria)';
+  lastPred={cases,risk,temp,rain,month,disease:activeDisease};
+  document.getElementById('dl-report-btn').style.display='block';
+  document.getElementById('pin-compare-btn').style.display='block';
+  document.getElementById('info-panel').style.display='none';
+  const ra=document.getElementById('result-area');ra.style.display='flex';
+  document.getElementById('r-num').textContent=cases.toLocaleString();
+  document.getElementById('r-num').style.color=clr;
+  setTimeout(()=>document.getElementById('r-cases').classList.add('show'),50);
+  const re={LOW:'✅',MODERATE:'⚠️',HIGH:'🚨'}[risk]||'⚠️';
+  document.getElementById('r-risk-val').textContent=re+' '+risk;
+  document.getElementById('r-risk-val').style.color=clr;
+  document.getElementById('r-risk-sub').textContent=cases+' predicted cases · '+MONTHS[month-1];
+  setTimeout(()=>document.getElementById('r-risk').classList.add('show'),150);
+  document.getElementById('g-fill').style.width=(data.gauge_pct||50)+'%';
+  const pill=document.getElementById('r-pill');pill.textContent=risk;pill.className='rpill '+risk.toLowerCase();
+  setTimeout(()=>document.getElementById('r-gauge').classList.add('show'),250);
+  const ac=document.getElementById('r-alert');
+  if(risk==='HIGH'){
+    document.getElementById('r-alert-msg').textContent=`${isD?'Dengue':'Malaria'} cases predicted: ${cases}. Notify district health officers, deploy vector control teams, and issue a public advisory.`;
+    ac.classList.add('show');triggerCritical(cases,isD?'Dengue':'Malaria');
+  } else {ac.classList.remove('show');document.getElementById('crit-banner').style.display='none'}
+}
+
+function hideResults(){
+  document.getElementById('info-panel').style.display='';
+  document.getElementById('result-area').style.display='none';
+  ['r-cases','r-risk','r-gauge'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  document.getElementById('r-alert').classList.remove('show');
+  document.getElementById('dl-report-btn').style.display='none';
+  document.getElementById('pin-compare-btn').style.display='none';
+}
+
+function triggerCritical(cases,dis){
+  const b=document.getElementById('crit-banner');
+  document.getElementById('crit-msg').textContent=`🚨 ${dis} cases predicted: ${cases} — Critical threshold exceeded.`;
+  b.style.display='block';
+  if(!chatOpen)toggleChat();
+  setTimeout(()=>addMsg(`🚨 <strong>CRITICAL — ${dis.toUpperCase()}</strong><br><br>Predicted: <strong>${cases}</strong> cases<br><br>Actions:<br>• Alert district health officers<br>• Deploy mosquito control teams<br>• Increase diagnostic capacity<br>• Issue public health advisory`,'warn'),500);
+}
+
+// ── CHATBOT (fully rule-based, no external API) ────────────────────────────
+
+/* ── Knowledge base ── */
+const KB = {
+  dengue: {
+    symptoms: `🦟 <strong>Dengue Symptoms</strong><br>
+• Sudden high fever (104°F / 40°C)<br>
+• Severe headache &amp; pain behind the eyes<br>
+• Intense joint &amp; muscle pain ("breakbone fever")<br>
+• Skin rash (appears 2–5 days after fever)<br>
+• Mild bleeding: nosebleeds, gum bleeding<br>
+• Fatigue, nausea, vomiting<br><br>
+⚠️ Seek immediate care if you notice severe abdominal pain, persistent vomiting, or bleeding.`,
+
+    causes: `🦟 <strong>What Causes Dengue?</strong><br>
+• Caused by the <em>Dengue virus</em> (4 serotypes: DENV-1 to DENV-4)<br>
+• Transmitted by the <em>Aedes aegypti</em> mosquito (bites mainly in daytime)<br>
+• Mosquitoes breed in clean stagnant water — flower pots, coolers, tyres<br>
+• Peak risk: <strong>August–September</strong> during high monsoon rainfall<br>
+• NOT spread person-to-person directly`,
+
+    prevention: `🛡️ <strong>Dengue Prevention</strong><br>
+• Use mosquito repellents &amp; wear long-sleeved clothing<br>
+• Sleep under mosquito nets, especially at dawn/dusk<br>
+• Eliminate stagnant water: empty coolers, pots, tyres weekly<br>
+• Keep drains unclogged; cover water storage containers<br>
+• Support community fogging &amp; awareness drives<br>
+• No approved vaccine widely available in India — prevention is key`,
+
+    highRiskMonths: `📅 <strong>Dengue High-Risk Months</strong><br>
+• <strong>Peak season: June – October</strong> (Southwest Monsoon)<br>
+• Highest cases: <strong>August &amp; September</strong><br>
+• Moderate risk: July and October (pre/post-peak)<br>
+• Low risk: November – May (dry months)<br><br>
+📊 This matches our training data: dengue cases range from 2 (winter) to 370 (peak monsoon) per month.`,
+
+    foods: `🥗 <strong>Foods to Help During Dengue</strong><br>
+• <strong>Papaya leaf juice</strong> — shown to boost platelet count<br>
+• <strong>Coconut water</strong> — replenishes electrolytes &amp; hydration<br>
+• <strong>Pomegranate</strong> — rich in iron, supports blood cell production<br>
+• <strong>Kiwi &amp; citrus fruits</strong> — Vitamin C boosts immunity<br>
+• <strong>Turmeric milk</strong> — anti-inflammatory, supports recovery<br>
+• <strong>Broth &amp; soups</strong> — easy digestion, maintains hydration<br>
+• <strong>Spinach &amp; beetroot</strong> — iron-rich, helps platelet count<br><br>
+❌ Avoid oily, spicy food and caffeine during illness.`,
+
+    treatment: `💊 <strong>Dengue Treatment</strong><br>
+• No specific antiviral — treatment is supportive<br>
+• Rest and drink plenty of fluids (ORS, coconut water)<br>
+• Use Paracetamol for fever — <strong>avoid Aspirin &amp; Ibuprofen</strong><br>
+• Monitor platelet count; hospitalise if it drops below 20,000<br>
+• Platelet transfusion only if severe bleeding occurs<br>
+• Most patients recover fully in 1–2 weeks with proper care`,
+  },
+
+  malaria: {
+    symptoms: `🩸 <strong>Malaria Symptoms</strong><br>
+• Cyclical fever: chills → high fever → sweating (every 48–72 hrs)<br>
+• Severe headache and body aches<br>
+• Nausea, vomiting, and diarrhoea<br>
+• Fatigue and anaemia (pale appearance)<br>
+• <em>P. falciparum</em> (severe): confusion, seizures, organ failure<br><br>
+⚠️ <em>Falciparum</em> malaria is life-threatening — seek care within 24 hrs of fever onset.`,
+
+    causes: `🩸 <strong>What Causes Malaria?</strong><br>
+• Caused by <em>Plasmodium</em> parasites — mainly <em>P. falciparum</em> &amp; <em>P. vivax</em> in India<br>
+• Transmitted by the <em>Anopheles</em> mosquito (bites mainly at night)<br>
+• Breeds in slow-moving or stagnant water — pools, rice fields, marshes<br>
+• Peak risk: <strong>August–September</strong> after heavy monsoon rainfall<br>
+• Can also spread via blood transfusion or contaminated needles`,
+
+    prevention: `🛡️ <strong>Malaria Prevention</strong><br>
+• Sleep under insecticide-treated mosquito nets (ITNs) every night<br>
+• Apply DEET-based repellent on exposed skin in evenings<br>
+• Wear full-sleeved clothes after sunset<br>
+• Drain stagnant water near homes; use Gambusia fish in ponds<br>
+• Indoor Residual Spraying (IRS) recommended in endemic areas<br>
+• Take antimalarial prophylaxis when traveling to high-risk zones<br>
+• Rapid Diagnostic Test (RDT) kits available at health centres`,
+
+    highRiskMonths: `📅 <strong>Malaria High-Risk Months</strong><br>
+• <strong>Peak season: June – October</strong> (Southwest Monsoon)<br>
+• Highest cases: <strong>August &amp; September</strong><br>
+• <em>P. falciparum</em> peaks sharply in post-monsoon period<br>
+• Low transmission: November – April (dry &amp; cool months)<br><br>
+📊 Training data shows malaria cases range from 67 (dry months) to 2,119 (peak monsoon) per month.`,
+
+    foods: `🥗 <strong>Foods to Help During Malaria</strong><br>
+• <strong>Citrus fruits (lemon, orange)</strong> — Vitamin C boosts immunity<br>
+• <strong>Ginger tea</strong> — anti-inflammatory, reduces nausea<br>
+• <strong>Turmeric &amp; warm milk</strong> — antimicrobial, aids recovery<br>
+• <strong>Vegetable soups &amp; khichdi</strong> — light, easy on digestion<br>
+• <strong>Pomegranate</strong> — combats anaemia from blood cell destruction<br>
+• <strong>Coconut water</strong> — restores electrolytes lost during fever sweating<br>
+• <strong>Yoghurt / curd</strong> — probiotics support gut health during antibiotics<br><br>
+❌ Avoid alcohol, raw foods, and heavy/fried meals during illness.`,
+
+    treatment: `💊 <strong>Malaria Treatment</strong><br>
+• Confirmed by blood smear or RDT before treatment<br>
+• <em>P. vivax</em>: Chloroquine + Primaquine (14 days)<br>
+• <em>P. falciparum</em>: Artemisinin Combination Therapy (ACT)<br>
+• Severe malaria: IV Artesunate + hospitalisation<br>
+• Complete the full course even if you feel better<br>
+• <strong>Never self-medicate</strong> — drug-resistant strains are increasing`,
+  },
+
+  general: {
+    about: `ℹ️ <strong>About EpiSense</strong><br>
+• A season-aware ML disease prediction platform<br>
+• Predicts <strong>Dengue</strong> &amp; <strong>Malaria</strong> risk from weather inputs<br>
+• Models trained on 2020–2025 Bengaluru data<br>
+• Inputs: Temperature (°C), Rainfall (mm/month), Month<br>
+• Outputs: Predicted case count + Risk level (Low/Moderate/High)<br>
+• <strong>Rainy Season (June–October)</strong>: Live ML predictions<br>
+• Summer &amp; Winter: Disease info guides`,
+
+    howToUse: `🖥️ <strong>How to Use EpiSense</strong><br>
+1️⃣ Select disease tab: <strong>Dengue</strong> or <strong>Malaria</strong><br>
+2️⃣ Enter <strong>Temperature</strong> (°C), <strong>Rainfall</strong> (mm), and <strong>Month</strong><br>
+3️⃣ Click <strong>Run Prediction</strong><br>
+4️⃣ View predicted case count &amp; risk level (Low / Moderate / High)<br>
+5️⃣ Use <strong>Quick Presets</strong>: Peak Monsoon / Pre-Monsoon / Dry Season<br>
+6️⃣ Scroll down to view historical analysis charts`,
+  }
+};
+
+/* ── Chart navigation map — works for BOTH dengue and malaria ── */
+const CHART_NAV = [
+  { keys: ['trend','historical','case trend','cases over'], prefer: ['trend','actual'] },
+  { keys: ['rainfall','rain'],                              prefer: ['rainfall'] },
+  { keys: ['temperature','temp'],                          prefer: ['temp'] },
+  { keys: ['monthly','seasonal','distribution'],           prefer: ['monthly'] },
+  { keys: ['actual','predicted','vs'],                     prefer: ['actual'] },
+  { keys: ['avg','average'],                               prefer: ['avg','actual'] },
+  { keys: ['heatmap','correlation','corr'],                prefer: ['heatmap'] },
+  { keys: ['confusion','matrix','classifier'],             prefer: ['matrix'] },
+  { keys: ['feature','importance'],                        prefer: ['feat','heatmap'] },
+];
+
+function findChart(q) {
+  for (const rule of CHART_NAV) {
+    if (rule.keys.some(k => q.includes(k))) {
+      for (const pref of rule.prefer) {
+        const c = CHARTS[activeDisease].find(x => x.key === pref);
+        if (c) return c;
+      }
+    }
+  }
+  return null;
+}
+
+/* ── Core chatbot functions ── */
+function toggleChat(){
+  chatOpen=!chatOpen;
+  const win=document.getElementById('chatbot-win'),fab=document.getElementById('chatbot-fab');
+  if(chatOpen){
+    win.classList.add('open');fab.textContent='✕';
+    if(!document.getElementById('chat-msgs').children.length)
+      addMsg(`👋 Hi! I'm your <strong>Health Assistant</strong>.<br>Ask me about <strong>dengue</strong> or <strong>malaria</strong> — symptoms, causes, prevention, foods, high-risk months, or your prediction results.<br><br>You can also type <em>"show heatmap"</em> or <em>"show trend chart"</em> to open charts.`,'bot');
+    setTimeout(()=>document.getElementById('chat-inp').focus(),300);
+  } else {win.classList.remove('open');fab.textContent='🤖'}
+}
+
+function addMsg(html,type){
+  const msgs=document.getElementById('chat-msgs'),d=document.createElement('div');
+  d.className='msg '+type;d.innerHTML=html;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function chatSend(){
+  const inp=document.getElementById('chat-inp'),text=inp.value.trim();
+  if(!text)return;addMsg(text,'user');inp.value='';handleChat(text);
+}
+
+function chipSend(el){addMsg(el.textContent,'user');handleChat(el.textContent);}
+
+function handleChat(text){
+  const q = text.toLowerCase().trim();
+  const d = activeDisease; // 'dengue' or 'malaria'
+
+  /* 1. Chart navigation — triggered by "show/graph/chart/plot/open/display" */
+  if(/show|graph|chart|plot|open|display/.test(q)){
+    const c = findChart(q);
+    if(c){ openZoom(c.src, c.title); addMsg(`📊 Opened <strong>${c.title}</strong> — press Esc or click outside to close.`,'bot'); return; }
+    /* If user just says "show chart" with no specific type, list available charts */
+    const list = CHARTS[d].map(x=>`• ${x.title}`).join('<br>');
+    addMsg(`📊 Available charts for <strong>${d}</strong>:<br>${list}<br><br>Try: <em>"show heatmap"</em> or <em>"show trend chart"</em>`,'bot');
+    return;
+  }
+
+  /* 2. Current prediction result */
+  if(/result|prediction|current|latest|forecast/.test(q)){
+    if(lastPred)
+      return addMsg(`🔬 Latest prediction (<strong>${lastPred.disease}</strong>):<br>
+• Predicted cases: <strong>${lastPred.cases}</strong><br>
+• Risk level: <strong>${lastPred.risk}</strong><br>
+• Inputs: Temp ${lastPred.temp}°C · Rain ${lastPred.rain}mm · Month ${MONTHS[lastPred.month-1]}`,'bot');
+    return addMsg('No prediction run yet. Enter values and click <strong>Run Prediction</strong> to get started!','bot');
+  }
+
+  /* 3. Symptoms */
+  if(/symptom|sign|feel|pain|fever|headache|rash|chill/.test(q)){
+    if(/dengue/.test(q))   return addMsg(KB.dengue.symptoms,'bot');
+    if(/malaria/.test(q))  return addMsg(KB.malaria.symptoms,'bot');
+    return addMsg(KB[d].symptoms,'bot');
+  }
+
+  /* 4. Causes */
+  if(/caus|reason|why|how.*(spread|transmit)|vector|mosquito|parasite/.test(q)){
+    if(/dengue/.test(q))  return addMsg(KB.dengue.causes,'bot');
+    if(/malaria/.test(q)) return addMsg(KB.malaria.causes,'bot');
+    return addMsg(KB[d].causes,'bot');
+  }
+
+  /* 5. Prevention */
+  if(/prevent|avoid|protect|tip|safe|precaution|repellent|net/.test(q)){
+    if(/dengue/.test(q))  return addMsg(KB.dengue.prevention,'bot');
+    if(/malaria/.test(q)) return addMsg(KB.malaria.prevention,'bot');
+    return addMsg(KB[d].prevention,'bot');
+  }
+
+  /* 6. High-risk months / season */
+  if(/high.?risk|risk.?month|peak|season|when|month|june|july|aug|sep|monsoon/.test(q)){
+    if(/dengue/.test(q))  return addMsg(KB.dengue.highRiskMonths,'bot');
+    if(/malaria/.test(q)) return addMsg(KB.malaria.highRiskMonths,'bot');
+    return addMsg(KB[d].highRiskMonths,'bot');
+  }
+
+  /* 7. Foods / diet / nutrition */
+  if(/food|eat|diet|drink|fruit|nutrition|recover|platelet|immunity/.test(q)){
+    if(/dengue/.test(q))  return addMsg(KB.dengue.foods,'bot');
+    if(/malaria/.test(q)) return addMsg(KB.malaria.foods,'bot');
+    return addMsg(KB[d].foods,'bot');
+  }
+
+  /* 8. Treatment / medicine / cure */
+  if(/treat|medicine|cure|drug|tablet|hospital|doctor|dose|tablet/.test(q)){
+    if(/dengue/.test(q))  return addMsg(KB.dengue.treatment,'bot');
+    if(/malaria/.test(q)) return addMsg(KB.malaria.treatment,'bot');
+    return addMsg(KB[d].treatment,'bot');
+  }
+
+  /* 9. About EpiSense / how to use */
+  if(/about|episense|what is this|how.*use|how.*work/.test(q)){
+    return addMsg(KB.general.about,'bot');
+  }
+  if(/how.*use|how.*work|help|guide|instruction/.test(q)){
+    return addMsg(KB.general.howToUse,'bot');
+  }
+
+  /* 10. Generic dengue / malaria question with no sub-topic */
+  if(/dengue/.test(q)) return addMsg(`I can help with <strong>dengue</strong>! Ask me about:<br>
+• Symptoms &nbsp;• Causes &nbsp;• Prevention<br>
+• High-risk months &nbsp;• Foods to eat &nbsp;• Treatment<br>
+• Or type <em>"show chart"</em> to view analysis`,'bot');
+  if(/malaria/.test(q)) return addMsg(`I can help with <strong>malaria</strong>! Ask me about:<br>
+• Symptoms &nbsp;• Causes &nbsp;• Prevention<br>
+• High-risk months &nbsp;• Foods to eat &nbsp;• Treatment<br>
+• Or type <em>"show chart"</em> to view analysis`,'bot');
+
+  /* 11. Default fallback */
+  addMsg(`I can help with the following — try asking:<br>
+🦟 <em>"Dengue symptoms"</em> or <em>"Malaria causes"</em><br>
+🛡️ <em>"Prevention tips"</em><br>
+📅 <em>"High risk months"</em><br>
+🥗 <em>"Foods to eat"</em><br>
+💊 <em>"Treatment"</em><br>
+📊 <em>"Show heatmap"</em> / <em>"Show trend chart"</em><br>
+🔬 <em>"Current result"</em>`,'bot');
+}
+
+
+// ── FEATURE: DOWNLOAD / PRINT REPORT ──
+function downloadReport(){
+  if(!lastPred){ alert('Run a prediction first!'); return; }
+  const RISK_CLASS = {LOW:'risk-low', MODERATE:'risk-mod', HIGH:'risk-high'};
+  const riskEmoji  = {LOW:'✅', MODERATE:'⚠️', HIGH:'🚨'};
+  const d = lastPred;
+  const now = new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+  document.getElementById('print-report').innerHTML = `
+    <h1>🦟 EpiSense — Prediction Report</h1>
+    <div class="pr-sub">Generated: ${now} &nbsp;|&nbsp; Disease: <strong>${d.disease.charAt(0).toUpperCase()+d.disease.slice(1)}</strong></div>
+    <div class="pr-grid">
+      <div class="pr-box">
+        <div class="pr-lbl">Forecasted Case Load</div>
+        <div class="pr-val">${d.cases.toLocaleString()}</div>
+        <div style="font-size:.8rem;color:#555">predicted cases</div>
+      </div>
+      <div class="pr-box">
+        <div class="pr-lbl">Risk Level</div>
+        <div class="pr-val" style="font-size:1.4rem">${riskEmoji[d.risk] || ''} ${d.risk}</div>
+        <span class="pr-risk ${RISK_CLASS[d.risk]||'risk-mod'}">${d.risk}</span>
+      </div>
+    </div>
+    <div class="pr-inputs">
+      <div class="pr-inp-box"><div class="pr-lbl">Temperature</div><strong>${d.temp}°C</strong></div>
+      <div class="pr-inp-box"><div class="pr-lbl">Rainfall</div><strong>${d.rain} mm/month</strong></div>
+      <div class="pr-inp-box"><div class="pr-lbl">Month</div><strong>${MONTHS[d.month-1]}</strong></div>
+    </div>
+    <div class="pr-box" style="margin-bottom:20px">
+      <div class="pr-lbl">Recommendation</div>
+      <div style="font-size:.85rem;margin-top:6px;line-height:1.7">${
+        d.risk==='HIGH'
+          ? '🚨 CRITICAL: Notify district health officers immediately. Deploy vector control teams. Increase diagnostic capacity. Issue public health advisory.'
+          : d.risk==='MODERATE'
+          ? '⚠️ MODERATE RISK: Increase surveillance frequency. Pre-position medical supplies. Issue community awareness advisories.'
+          : '✅ LOW RISK: Maintain routine surveillance. Continue standard vector control measures.'
+      }</div>
+    </div>
+    <div class="pr-footer">
+      EpiSense — Disease Prediction Using Weather Data &nbsp;|&nbsp; B.N.M. Institute of Technology, Bengaluru &nbsp;|&nbsp; 2025-26
+    </div>`;
+  window.print();
+}
+
+// ── FEATURE: COMPARE SCENARIOS ──
+let pinnedScenario = null;
+
+function pinScenario(){
+  if(!lastPred){ alert('Run a prediction first!'); return; }
+  pinnedScenario = {...lastPred};
+  document.getElementById('pin-compare-btn').textContent = '▶️ Run Scenario B & Compare';
+  document.getElementById('pin-compare-btn').onclick = runScenarioB;
+  // Render placeholder for Scenario A immediately
+  renderCompareCol('cmp-a', pinnedScenario, 'Scenario A (Pinned)', null);
+  document.getElementById('cmp-b').innerHTML = `
+    <div class="cmp-head">Scenario B</div>
+    <div style="color:var(--muted2);font-size:.8rem;margin-top:8px">
+      Adjust inputs &amp; click<br><strong style="color:var(--text)">▶️ Run Scenario B</strong>
+    </div>`;
+  document.getElementById('compare-sec').style.display = 'block';
+  document.getElementById('compare-sec').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function runScenarioB(){
+  // Run prediction then compare
+  const btn = document.getElementById('predict-btn');
+  const orig = btn.onclick;
+  runPrediction();
+  // Wait for fetch to complete — watch lastPred change
+  const poll = setInterval(()=>{
+    if(lastPred && JSON.stringify(lastPred) !== JSON.stringify(pinnedScenario)){
+      clearInterval(poll);
+      renderCompareCol('cmp-a', pinnedScenario, 'Scenario A', lastPred);
+      renderCompareCol('cmp-b', lastPred, 'Scenario B', pinnedScenario);
+      document.getElementById('compare-sec').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  }, 300);
+  setTimeout(()=>clearInterval(poll), 8000);
+}
+
+function renderCompareCol(colId, pred, label, other){
+  const RISK_COLORS = {LOW:'#34d399', MODERATE:'#f59e0b', HIGH:'#f43f5e'};
+  const col = document.getElementById(colId);
+  let verdict = '';
+  if(other){
+    const scoreA = {LOW:1,MODERATE:2,HIGH:3}[label.startsWith('Scenario A') ? pred.risk : other.risk];
+    const scoreB = {LOW:1,MODERATE:2,HIGH:3}[label.startsWith('Scenario A') ? other.risk : pred.risk];
+    const myCases = pred.cases, theirCases = other.cases;
+    if(myCases < theirCases - 5)
+      verdict = `<span class="cmp-verdict verdict-safe">✅ Safer Scenario</span>`;
+    else if(myCases > theirCases + 5)
+      verdict = `<span class="cmp-verdict verdict-risk">🔴 Higher Risk</span>`;
+    else
+      verdict = `<span class="cmp-verdict verdict-equal">≈ Similar Risk</span>`;
+  }
+  const diseaseColor = pred.disease==='dengue' ? '#f43f5e' : '#34d399';
+  col.innerHTML = `
+    <div class="cmp-head">${label}</div>
+    <span class="cmp-disease-tag" style="background:${diseaseColor}22;color:${diseaseColor}">
+      ${pred.disease==='dengue'?'🦟 Dengue':'🩸 Malaria'}
+    </span>
+    <div class="cmp-num" style="color:${RISK_COLORS[pred.risk]||'#fff'}">${pred.cases.toLocaleString()}</div>
+    <div class="cmp-sub">predicted cases &mdash; ${MONTHS[pred.month-1]}</div>
+    <span class="cmp-risk-pill" style="background:${RISK_COLORS[pred.risk]}22;color:${RISK_COLORS[pred.risk]}">
+      ${pred.risk}
+    </span>
+    <div class="cmp-inputs">
+      🌡️ ${pred.temp}°C &nbsp; 💧 ${pred.rain}mm &nbsp; 📅 ${MONTHS[pred.month-1]}
+    </div>
+    ${verdict}`;
+}
+
+function clearCompare(){
+  pinnedScenario = null;
+  document.getElementById('compare-sec').style.display = 'none';
+  document.getElementById('pin-compare-btn').textContent = '📌 Pin as Scenario A & Compare';
+  document.getElementById('pin-compare-btn').onclick = pinScenario;
+}
+
+renderCharts();
+setTimeout(runPrediction,600);
+</script>
+</body>
+</html>
